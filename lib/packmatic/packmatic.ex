@@ -8,39 +8,39 @@ defmodule Packmatic do
   alias __MODULE__.Encoder
 
   @type manifest :: Manifest.t()
+  @type manifest_entry :: Manifest.entry() | Manifest.entry_keyword()
   @type options :: Encoder.options()
-  @type source_entry :: Packmatic.Source.entry()
-  @type source_path :: Path.t()
-  @type source_option :: {:timestamp, DateTime.t()}
-  @type stream_entry :: {source_entry, source_path}
-  @type stream_entry_extended :: {source_entry, source_path, nonempty_list(source_option)}
+
   @spec build_stream(manifest, options) :: term()
-  @spec build_stream(nonempty_list(stream_entry | stream_entry_extended), options) :: term()
+  @spec build_stream(nonempty_list(manifest_entry), options) :: term()
 
   @doc """
   Builds a Stream which can be consumed to construct a ZIP file from various sources, as specified
-  in the Manifest. When buinding the Stream, options can be passed to configure how the Encoder
+  in the Manifest. When building the Stream, options can be passed to configure how the Encoder
   should behave when Source acquisition fails.
 
   ## Examples
 
-      stream = Packmatic.build_stream([
-        {{:file, "/tmp/hello.pdf"}, "hello.pdf"},
-        {{:file, "/tmp/world.pdf"}, "world.pdf"}
-      ])
+  The Stream can be created by passing a `t:Packmatic.Manifest.t/0` struct, a list of Manifest
+  Entries (`t:Packmatic.Manifest.entry/0`), or a list of Keywords that are understood and can be
+  transformed to Manifest Entries (`t:Packmatic.Manifest.entry_keyword/0`).
 
-      stream = Packmatic.build_stream([
-        {{:file, "/tmp/htllo.pdf"}, "hello.pdf"},
-        {{:file, "/tmp/world.pdf"}, "world.pdf"}
-      ], on_error: :skip)
+      iex(1)> stream = Packmatic.build_stream(Packmatic.Manifest.create())
+      iex(2)> is_function(stream)
+      true
+
+      iex(1)> stream = Packmatic.build_stream([])
+      iex(2)> is_function(stream)
+      true
+
+      iex(1)> stream = Packmatic.build_stream([[source: {:file, "foo.bar"}]])
+      iex(2)> is_function(stream)
+      true
   """
-
   def build_stream(target, options \\ [])
 
   def build_stream(entries, options) when is_list(entries) do
-    entries
-    |> Enum.reduce(Manifest.create(), &build_stream_prepend/2)
-    |> build_stream(options)
+    entries |> Manifest.create() |> build_stream(options)
   end
 
   def build_stream(%Manifest{} = manifest, options) do
@@ -64,14 +64,5 @@ defmodule Packmatic do
     end
 
     Stream.resource(start_fun, next_fun, after_fun)
-  end
-
-  defp build_stream_prepend({source, path}, manifest) do
-    Manifest.prepend(manifest, source: source, path: path)
-  end
-
-  defp build_stream_prepend({source, path, options}, manifest) do
-    keyword = Keyword.merge(Keyword.take(options, ~w(timestamp)a), source: source, path: path)
-    Manifest.prepend(manifest, keyword)
   end
 end

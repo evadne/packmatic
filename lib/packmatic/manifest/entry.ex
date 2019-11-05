@@ -8,7 +8,15 @@ defmodule Packmatic.Manifest.Entry do
   """
 
   @type source :: Packmatic.Source.entry()
-  @type t :: %__MODULE__{source: source, path: Path.t(), timestamp: DateTime.t()}
+  @type path :: Path.t()
+  @type timestamp :: DateTime.t()
+  @type t :: %__MODULE__{source: source, path: path, timestamp: timestamp}
+
+  @type error_source :: {:source, :missing | :invalid}
+  @type error_path :: {:path, :missing}
+  @type error_timestamp :: {:timestamp, :missing | :invalid}
+  @type error :: error_source | error_path | error_timestamp
+
   @enforce_keys ~w(source path timestamp)a
   defstruct source: nil, path: nil, timestamp: DateTime.from_unix!(0)
 end

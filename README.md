@@ -57,9 +57,9 @@ Each Source Entry within the Manifest specifies the source from where to obtain 
 The usual way to construct a Stream is as follows.
 
     entries = [
-      {{:file, "/tmp/hello.pdf"}, "hello.pdf"},
-      {{:file, "/tmp/world.pdf"}, "world.pdf"},
-      {{:url, "https://example.com/foo.pdf"}, "foo/bar.pdf"}
+      [source: {:file, "/tmp/hello.pdf"}, path: "hello.pdf"],
+      [source: {:file, "/tmp/world.pdf"}, path: "world.pdf"],
+      [source: {:url, "https://example.com/foo.pdf"}, path: "foo/bar.pdf"]
     ]
     
     stream = Packmatic.build_stream(entries)

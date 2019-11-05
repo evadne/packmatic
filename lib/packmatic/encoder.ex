@@ -35,11 +35,9 @@ defmodule Packmatic.Encoder do
   alias Packmatic.Manifest
   alias Packmatic.Source
   alias Packmatic.Field
-  alias Packmatic.Validator
   alias __MODULE__.EncodingState
   alias __MODULE__.JournalingState
 
-  @type manifest :: Manifest.t()
   @type options :: [{:on_error, :skip | :halt}]
   @type state_encoding :: EncodingState.t()
   @type state_journaling :: JournalingState.t()
@@ -50,7 +48,8 @@ defmodule Packmatic.Encoder do
   @type ok_halt :: {:ok, :halt, :done, nil}
   @type error :: {:error, term()}
 
-  @spec stream_start(manifest, options) :: ok_start_encoding | {:error, term()}
+  @spec stream_start(Manifest.valid(), options) :: ok_start_encoding
+  @spec stream_start(Manifest.invalid(), options) :: {:error, %Manifest{valid?: false}}
   @spec stream_next(:encoding, state_encoding) :: ok_encoding | ok_journaling | error
   @spec stream_next(:journaling, state_journaling) :: ok_journaling | ok_done
   @spec stream_next(:done, nil) :: ok_halt
@@ -58,11 +57,18 @@ defmodule Packmatic.Encoder do
 
   defdelegate iolist_size(item), to: :erlang
 
-  @doc "Starts the Stream by validating the Manifest and initialising the Encoding State."
+  @doc """
+  Starts the Stream.
+
+  If the Manifest provided is invalid, the call will not succeed and the invalid Manifest will be
+  returned.
+  """
   def stream_start(manifest, options) do
-    with :ok <- Validator.validate(manifest) do
+    with %Manifest{valid?: true} <- manifest do
       on_error = Keyword.get(options, :on_error, :halt)
       {:ok, :encoding, %EncodingState{remaining: manifest.entries, on_error: on_error}}
+    else
+      _ -> {:error, manifest}
     end
   end
 
@@ -82,6 +88,9 @@ defmodule Packmatic.Encoder do
   def stream_next(:journaling, %JournalingState{} = state), do: stream_journal(state)
   def stream_next(:done, nil), do: {:ok, :halt, :done, nil}
 
+  @doc """
+  Completes the Stream.
+  """
   def stream_after(_, _), do: :ok
 
   defp stream_encode(%{current: nil, remaining: [entry | rest]} = state) do
