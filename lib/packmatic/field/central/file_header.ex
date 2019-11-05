@@ -44,9 +44,9 @@ defmodule Packmatic.Field.Central.FileHeader do
   2.  The Compressed Size and Original Size fields are both set to `0xFF 0xFF 0xFF 0xFF`, in order
       to force the real sizes, set in the Zip64 Extended Information Extra Field (provided by
       `Packmatic.Field.Shared.ExtendedInformation`) to be used.
-  
+
   3.  The following Extra Fields are emitted:
-  
+
       - Extended Timestamp, see `Packmatic.Field.Shared.ExtendedTimestamp`
       - Zip64 Extended Information, see `Packmatic.Field.Shared.ExtendedInformation`
 

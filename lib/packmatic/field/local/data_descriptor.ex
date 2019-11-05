@@ -24,7 +24,7 @@ defmodule Packmatic.Field.Local.DataDescriptor do
   @type t :: %__MODULE__{
           checksum: non_neg_integer(),
           size_compressed: non_neg_integer(),
-          size: non_neg_integer(),
+          size: non_neg_integer()
         }
 
   @enforce_keys ~w(checksum size_compressed size)a

@@ -40,7 +40,7 @@ defmodule Packmatic.Field.Local.FileHeader do
       contains relevant information.
 
   3.  The following Extra Field is emitted:
-  
+
       - Extended Timestamp, see `Packmatic.Field.Shared.ExtendedTimestamp`
   """
 

@@ -62,7 +62,7 @@ defmodule Packmatic.Source.URL do
     Application.get_env(@otp_app, __MODULE__, [])
     |> Keyword.get(:whole_file_timeout, @default_whole_file_timeout)
   end
-  
+
   defp get_max_sessions do
     Application.get_env(@otp_app, __MODULE__, [])
     |> Keyword.get(:max_sessions, @default_max_sessions)

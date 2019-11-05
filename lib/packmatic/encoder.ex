@@ -78,7 +78,6 @@ defmodule Packmatic.Encoder do
 
   When the Stream is in `:done` status, it can not be iterated further.
   """
-
   def stream_next(:encoding, %EncodingState{} = state), do: stream_encode(state)
   def stream_next(:journaling, %JournalingState{} = state), do: stream_journal(state)
   def stream_next(:done, nil), do: {:ok, :halt, :done, nil}
