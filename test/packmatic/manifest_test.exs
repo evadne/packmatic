@@ -1,8 +1,7 @@
 defmodule Packmatic.ManifestTest do
   use ExUnit.Case, async: true
   alias Packmatic.Manifest
-
-  doctest Manifest
+  doctest Packmatic.Manifest
 
   describe "create/0" do
     test "returns invalid empty model" do

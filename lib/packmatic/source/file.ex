@@ -5,13 +5,15 @@ defmodule Packmatic.Source.File do
   """
 
   alias Packmatic.Source
-  @type entry :: {:file, String.t()}
-  @type t :: %__MODULE__{path: String.t(), device: File.io_device()}
+  @behaviour Source
 
+  @type init_arg :: String.t()
+  @type init_result :: {:ok, t}
+  @spec init(init_arg) :: init_result
+
+  @type t :: %__MODULE__{path: String.t(), device: File.io_device()}
   @enforce_keys ~w(path device)a
   defstruct path: nil, device: nil
-
-  @behaviour Source
 
   @impl Source
   def init(path) do

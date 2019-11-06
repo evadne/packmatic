@@ -55,21 +55,17 @@ defmodule Packmatic.Manifest do
 
   alias __MODULE__.Entry
 
+  entries = quote do: nonempty_list(Entry.t())
+  errors = quote do: nonempty_list(error)
+
   @typedoc "Represents the Manifest."
-  @type t :: %__MODULE__{entries: [entry], errors: [error], valid?: true | false}
+  @type t :: %__MODULE__{entries: [Entry.t()], errors: [error], valid?: true | false}
 
   @typedoc "Represents a valid Manifest, where there must be Entries and no errors."
-  @type valid :: %__MODULE__{entries: nonempty_list(entry), errors: [], valid?: true}
+  @type valid :: %__MODULE__{entries: unquote(entries), errors: [], valid?: true}
 
   @typedoc "Represents an invalid Manifest, where there must be errors and might be Entries."
-  @type invalid :: %__MODULE__{entries: list(entry), errors: nonempty_list(error), valid?: false}
-
-  @type entry :: Entry.t()
-  @type entry_keyword_source :: {:source, Entry.source()}
-  @type entry_keyword_path :: {:path, Entry.path()}
-  @type entry_keyword_timestamp :: {:timestamp, Entry.timestamp()}
-  @type entry_keyword_value :: entry_keyword_source | entry_keyword_path | entry_keyword_timestamp
-  @type entry_keyword :: nonempty_list(entry_keyword_value)
+  @type invalid :: %__MODULE__{entries: list(Entry.t()), errors: unquote(errors), valid?: false}
 
   @typedoc "Represents an Error which can be related to an Entry or the Manifest itself."
   @type error :: error_entry | error_manifest
@@ -88,8 +84,8 @@ defmodule Packmatic.Manifest do
 
   @spec create() :: invalid()
   @spec create([]) :: invalid()
-  @spec create(nonempty_list(entry | entry_keyword)) :: valid() | invalid()
-  @spec prepend(t(), entry | entry_keyword) :: valid() | invalid()
+  @spec create(nonempty_list(Entry.t() | Entry.proplist())) :: valid() | invalid()
+  @spec prepend(t(), Entry.t() | Entry.proplist()) :: valid() | invalid()
 
   @doc """
   Creates a Manifest based on Entries given. If there are no Entries, the Manifest will be

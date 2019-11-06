@@ -5,13 +5,15 @@ defmodule Packmatic.Source.URL do
   """
 
   alias Packmatic.Source
-  @type entry :: {:uri, String.t()}
-  @type t :: %__MODULE__{url: String.t(), id: term()}
+  @behaviour Source
 
+  @type init_arg :: String.t()
+  @type init_result :: {:ok, t}
+  @spec init(init_arg) :: init_result
+
+  @type t :: %__MODULE__{url: String.t(), id: term()}
   @enforce_keys ~w(url id)a
   defstruct url: nil, id: nil
-
-  @behaviour Source
 
   @impl Source
   def init(url) do

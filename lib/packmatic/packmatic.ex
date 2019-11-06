@@ -8,7 +8,7 @@ defmodule Packmatic do
   alias __MODULE__.Encoder
 
   @type manifest :: Manifest.t()
-  @type manifest_entry :: Manifest.entry() | Manifest.entry_keyword()
+  @type manifest_entry :: Manifest.Entry.t() | Manifest.Entry.proplist()
   @type options :: Encoder.options()
 
   @spec build_stream(manifest, options) :: term()
@@ -22,8 +22,8 @@ defmodule Packmatic do
   ## Examples
 
   The Stream can be created by passing a `t:Packmatic.Manifest.t/0` struct, a list of Manifest
-  Entries (`t:Packmatic.Manifest.entry/0`), or a list of Keywords that are understood and can be
-  transformed to Manifest Entries (`t:Packmatic.Manifest.entry_keyword/0`).
+  Entries (`t:Packmatic.Manifest.Entry.t/0`), or a list of Keyword Lists that are understood and
+  can be transformed to Manifest Entries (`t:Packmatic.Manifest.Entry.proplist/0`).
 
       iex(1)> stream = Packmatic.build_stream(Packmatic.Manifest.create())
       iex(2)> is_function(stream)

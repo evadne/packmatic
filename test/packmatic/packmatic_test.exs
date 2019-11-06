@@ -1,6 +1,5 @@
 defmodule PackmaticTest do
   use ExUnit.Case, async: true
-
   doctest Packmatic
 
   setup do
