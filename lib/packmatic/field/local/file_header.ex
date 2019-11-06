@@ -1,7 +1,7 @@
 defmodule Packmatic.Field.Local.FileHeader do
   @moduledoc """
   Represents the Local File Header, which is emitted before the content of each file is
-  incorporated into the ZIP stream.
+  incorporated into the Zip stream.
 
   ## Structure
 

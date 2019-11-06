@@ -1,7 +1,7 @@
 defmodule Packmatic.Encoder do
   @moduledoc """
-  Holds logic which can be used to put together a ZIP file in an interative fashion, suitable for
-  wrapping within a `Stream`. The format of ZIP files emitted by `Packmatic.Encoder` is documented
+  Holds logic which can be used to put together a Zip file in an interative fashion, suitable for
+  wrapping within a `Stream`. The format of Zip files emitted by `Packmatic.Encoder` is documented
   under the modules implementing the `Packmatic.Field` protocol.
 
   The Encoder is wrapped in `Stream.resource/3` for consumption as an Elixir Stream, under

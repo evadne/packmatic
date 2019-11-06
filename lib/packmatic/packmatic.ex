@@ -1,6 +1,6 @@
 defmodule Packmatic do
   @moduledoc """
-  Top-level module holding the Packmatic library, which provides ZIP-oriented stream aggregation
+  Top-level module holding the Packmatic library, which provides Zip-oriented stream aggregation
   services from various sources.
   """
 
@@ -15,7 +15,7 @@ defmodule Packmatic do
   @spec build_stream(nonempty_list(unquote(manifest_entry)), unquote(options)) :: term()
 
   @doc """
-  Builds a Stream which can be consumed to construct a ZIP file from various sources, as specified
+  Builds a Stream which can be consumed to construct a Zip file from various sources, as specified
   in the Manifest. When building the Stream, options can be passed to configure how the Encoder
   should behave when Source acquisition fails.
 
