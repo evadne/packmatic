@@ -53,6 +53,13 @@ defmodule Packmatic.Source do
   """
   @type entry :: unquote(Builder.build_quoted_entry_type(sources))
 
+  @typedoc """
+  Represents the internal (private) struct which holds runtime state for a resolved Source. In
+  case of a File source, this may hold the File Handle indirectly; in case of a URL source this
+  may indirectly refer to the underlying network socket.
+  """
+  @type t :: struct()
+
   for {name, module} <- sources do
     @spec build({unquote(name), unquote(module).init_arg()}) :: unquote(module).init_result()
   end
