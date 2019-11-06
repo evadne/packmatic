@@ -7,12 +7,12 @@ defmodule Packmatic do
   alias __MODULE__.Manifest
   alias __MODULE__.Encoder
 
-  @type manifest :: Manifest.t()
-  @type manifest_entry :: Manifest.Entry.t() | Manifest.Entry.proplist()
-  @type options :: Encoder.options()
+  manifest = quote do: Manifest.t()
+  manifest_entry = quote do: Manifest.Entry.t() | Manifest.Entry.proplist()
+  options = quote do: [Encoder.option()]
 
-  @spec build_stream(manifest, options) :: term()
-  @spec build_stream(nonempty_list(manifest_entry), options) :: term()
+  @spec build_stream(unquote(manifest), unquote(options)) :: term()
+  @spec build_stream(nonempty_list(unquote(manifest_entry)), unquote(options)) :: term()
 
   @doc """
   Builds a Stream which can be consumed to construct a ZIP file from various sources, as specified
