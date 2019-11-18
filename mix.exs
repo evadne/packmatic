@@ -59,7 +59,7 @@ defmodule Packmatic.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"],
+      extras: ["README.md", "CHANGELOG.md"],
       nest_modules_by_prefix: [
         Packmatic.Manifest,
         Packmatic.Source,
