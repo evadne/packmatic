@@ -2,7 +2,7 @@
 
 **Packmatic** generates Zip streams by aggregating File or URL Sources.
 
-By using a Stream, the caller can compose it within the confines of Plug’s request/response model and serve the content of the resultant Zip acrhive in a streaming fashion. This allows fast delivery of a Zip archive consisting of many disparate parts hosted in different places, without having to first spool all of them to disk.
+By using a Stream, the caller can compose it within the confines of Plug’s request/response model and serve the content of the resultant Zip archive in a streaming fashion. This allows fast delivery of a Zip archive consisting of many disparate parts hosted in different places, without having to first spool all of them to disk.
 
 The generated archive uses Zip64, and works with individual files that are larger than 4GB. See the Compatibility section for more information.
 
@@ -40,7 +40,7 @@ To install Packmatic, add the following line in your application’s dependencie
 
     defp deps do
       [
-        {:packmatic, "~> 0.1.1"}
+        {:packmatic, "~> 0.1.0"}
       ]
     end
 
