@@ -1,5 +1,5 @@
 defmodule PackmaticTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Packmatic
 
   setup do
@@ -19,11 +19,13 @@ defmodule PackmaticTest do
   end
 
   test "with no entries", context do
-    []
-    |> build_manifest()
-    |> Packmatic.build_stream()
-    |> Stream.into(File.stream!(context.file_path, [:write]))
-    |> Stream.run()
+    assert_raise Packmatic.StreamError, fn ->
+      []
+      |> build_manifest()
+      |> Packmatic.build_stream()
+      |> Stream.into(File.stream!(context.file_path, [:write]))
+      |> Stream.run()
+    end
   end
 
   test "with timestamp", context do

@@ -16,7 +16,7 @@ defmodule Packmatic.Field.Shared.ExtendedTimestamp do
   4 bytes  | Modification Time (Seconds since UNIX Epoch)
 
   #### Notes
-  
+
   1.  The flag value is `1`, representing that Modification Time is set.
   """
 

@@ -1,13 +1,16 @@
 defmodule Packmatic.Encoder.EncodingState do
   @moduledoc false
-  @type entry :: Packmatic.Manifest.Entry.t()
-  @type entry_source :: struct()
-  @type entry_info :: __MODULE__.EntryInfo.t()
+  alias Packmatic.Manifest.Entry
+  alias Packmatic.Source
+  alias __MODULE__.EntryInfo
+
+  @type entry_current :: {Entry.t(), Source.t(), EntryInfo.t()}
+  @type entry_encoded :: {Entry.t(), {:ok, EntryInfo.t()} | {:error, term()}}
 
   @type t :: %__MODULE__{
-          current: nil | {entry, entry_source, entry_info},
-          encoded: [{entry, {:ok, entry_info} | {:error, term()}}],
-          remaining: [entry],
+          current: nil | entry_current,
+          encoded: [entry_encoded],
+          remaining: [Entry.t()],
           zstream: nil | :zlib.zstream(),
           bytes_emitted: non_neg_integer(),
           on_error: :skip | :halt

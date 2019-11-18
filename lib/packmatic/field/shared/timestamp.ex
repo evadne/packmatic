@@ -7,7 +7,7 @@ defmodule Packmatic.Field.Shared.Timestamp do
   first built separately
 
   ## Structure
-  
+
   Size     | Content
   -------- | -
   2 bytes  | Hour (5 bits), Minute (6 bits), Second / 2 (5 bits)

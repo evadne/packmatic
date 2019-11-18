@@ -1,6 +1,6 @@
 # Packmatic
 
-**Packmatic** generates Zip Streams by aggregating File or URL Sources.
+**Packmatic** generates Zip streams by aggregating File or URL Sources.
 
 By using a Stream, the caller can compose it within the confines of Plug’s request/response model and serve the content of the resultant Zip acrhive in a streaming fashion. This allows fast delivery of a Zip archive consisting of many disparate parts hosted in different places, without having to first spool all of them to disk.
 
@@ -57,9 +57,9 @@ Each Source Entry within the Manifest specifies the source from where to obtain 
 The usual way to construct a Stream is as follows.
 
     entries = [
-      {{:file, "/tmp/hello.pdf"}, "hello.pdf"},
-      {{:file, "/tmp/world.pdf"}, "world.pdf"},
-      {{:url, "https://example.com/foo.pdf"}, "foo/bar.pdf"}
+      [source: {:file, "/tmp/hello.pdf"}, path: "hello.pdf"],
+      [source: {:file, "/tmp/world.pdf"}, path: "world.pdf"],
+      [source: {:url, "https://example.com/foo.pdf"}, path: "foo/bar.pdf"]
     ]
     
     stream = Packmatic.build_stream(entries)

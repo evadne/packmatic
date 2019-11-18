@@ -5,13 +5,15 @@ defmodule Packmatic.Source.Random do
   """
 
   alias Packmatic.Source
-  @type entry :: {:random, non_neg_integer}
-  @type t :: %__MODULE__{agent_pid: pid()}
+  @behaviour Source
 
+  @type init_arg :: non_neg_integer
+  @type init_result :: {:ok, t}
+  @spec init(init_arg) :: init_result
+
+  @type t :: %__MODULE__{agent_pid: pid()}
   @enforce_keys ~w(agent_pid)a
   defstruct agent_pid: nil
-
-  @behaviour Source
 
   @impl Source
   def init(bytes_remaining) do
