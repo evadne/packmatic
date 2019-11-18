@@ -6,9 +6,9 @@ By using a Stream, the caller can compose it within the confines of Plug’s req
 
 The generated archive uses Zip64, and works with individual files that are larger than 4GB. See the Compatibility section for more information.
 
-## Introduction
+## Design Rationale
 
-### The Problem
+### Problem
 
 In modern Web applications, content is often stored away from the host, such as Amazon S3, to enable better scalability and resiliency, as data would not be lost should a particular host go down. However, one disadvantage of this design is that data has become more spread-out, so previously simple operations such as creation of a Zip archive consisting of various files is now more complicated.
 
@@ -16,7 +16,7 @@ In a hypothetical scenario where the developer opts for synchronous generation, 
 
 In another hypothetical scenario, where the developer opts for asynchronous generation, spooling still has to happen and further infrastructure for background job execution, user notification, temporary storage, etc. is now needed, which increases complexity.
 
-### The Solution
+### Solution
 
 The overall goal for Packmatic is to deliver a modern Zip streamer, which is able to assemble a Zip file from various sources, such as HTTP(S) downloads or locally generated temporary files, on-the-fly, so as to minimise waiting time, reduce resource consumption and elevate customer happiness.
 
@@ -28,11 +28,13 @@ When the Stream is started, it spins up an Encoder process, which works in a sta
 
 The Encoder consumes the manifest as the Stream is consumed. In other words, the Stream starts producing data only when the client starts reading, and only as fast as the client reads, which reduces the amount of networking and local storage needed to start the process. Most of the acquisition work is interleaved, and back-pressured by client connection speed.
 
-Furthermore, since Packmatic only streams what it needs, and does not spool content locally, it is possible to produce large archives whose constituent files do not fit on one host. This is an advantage over conventional processes, where even in a synchronous scenario, all constituent files _and the archive_ must be spooled to disk.
+### Benefits
+
+Since Packmatic only streams what it needs, and does not spool content locally, it is possible to produce large archives whose constituent files do not fit on one host. This is an advantage over conventional processes, where even in a synchronous scenario, all constituent files _and the archive_ must be spooled to disk.
 
 This design enhances developer happiness as well, since by using a synchronous, iterative mode of operation, there is no longer any need to spool constituent files in the archive on disk; there is also no longer any need to build technical workarounds in order to compensate for archive preparation delays.
 
-With Packmatic, both the problem and the solution is drastically simplified. The user clicks “download”, and the file starts downloading. This is how it should be.
+With Packmatic, both the problem and the solution is drastically simplified. The user clicks “download”, and the archive starts downloading. This is how it should be.
 
 ## Installation
 
