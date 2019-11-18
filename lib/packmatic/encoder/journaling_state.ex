@@ -1,11 +1,10 @@
 defmodule Packmatic.Encoder.JournalingState do
   @moduledoc false
-  @type entry :: Packmatic.Manifest.Entry.t()
-  @type entry_info :: Packmatic.Encoder.EncodingState.EntryInfo.t()
+  alias Packmatic.Encoder.EncodingState
 
   @type t :: %__MODULE__{
           current: nil,
-          remaining: [{entry, {:ok, entry_info} | {:error, term()}}],
+          remaining: [EncodingState.entry_encoded()],
           offset: non_neg_integer(),
           entries_emitted: non_neg_integer(),
           bytes_emitted: non_neg_integer()

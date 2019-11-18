@@ -4,7 +4,7 @@ defmodule Packmatic.MixProject do
   def project do
     [
       app: :packmatic,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -40,9 +40,10 @@ defmodule Packmatic.MixProject do
       {:bypass, "~> 1.0.0", only: :test},
       {:dialyxir, "~> 1.0.0-rc.6", only: :dev, runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:timex, "~> 3.6.1", only: :test},
       {:httpotion, "~> 3.1.2"},
-      {:ibrowse, "~> 4.4.0"}
+      {:ibrowse, "~> 4.4.0"},
+      {:teamcity_formatter, github: "prook/teamcity_formatter", only: [:test], runtime: false},
+      {:timex, "~> 3.6.1", only: :test}
     ]
   end
 
@@ -58,7 +59,16 @@ defmodule Packmatic.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"]
+      extras: ["README.md", "CHANGELOG.md"],
+      nest_modules_by_prefix: [
+        Packmatic.Manifest,
+        Packmatic.Source,
+        Packmatic.Field
+      ],
+      groups_for_modules: [
+        "Data Structs": [~r/\.Field/],
+        Helpers: [Packmatic.Conn]
+      ]
     ]
   end
 

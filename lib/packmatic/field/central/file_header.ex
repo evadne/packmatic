@@ -1,7 +1,7 @@
 defmodule Packmatic.Field.Central.FileHeader do
   @moduledoc """
   Represents the Central Directory File Header, which is part of the Central Directory that is
-  emitted after all successfully encoded files have been incorporated into the ZIP stream.
+  emitted after all successfully encoded files have been incorporated into the Zip stream.
 
   ## Structure
 
@@ -10,7 +10,7 @@ defmodule Packmatic.Field.Central.FileHeader do
   Size     | Content
   -------- | -
   4 bytes  | Signature
-  1 byte   | Version made by - ZIP Specification Version
+  1 byte   | Version made by - Zip Specification Version
   1 byte   | Version made by - Environment
   2 bytes  | Version needed to extract
   2 bytes  | General Purpose Flag
@@ -44,9 +44,9 @@ defmodule Packmatic.Field.Central.FileHeader do
   2.  The Compressed Size and Original Size fields are both set to `0xFF 0xFF 0xFF 0xFF`, in order
       to force the real sizes, set in the Zip64 Extended Information Extra Field (provided by
       `Packmatic.Field.Shared.ExtendedInformation`) to be used.
-  
+
   3.  The following Extra Fields are emitted:
-  
+
       - Extended Timestamp, see `Packmatic.Field.Shared.ExtendedTimestamp`
       - Zip64 Extended Information, see `Packmatic.Field.Shared.ExtendedInformation`
 

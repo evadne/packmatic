@@ -1,0 +1,8 @@
+version: '3.4'
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: infra/docker-app-test/Dockerfile
+    image: ${IMAGE_NAME:-evadne/packmatic}:${IMAGE_TAG:-app-test}
+    command: ./start-test.sh

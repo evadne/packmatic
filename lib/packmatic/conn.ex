@@ -5,13 +5,16 @@ defmodule Packmatic.Conn do
   """
 
   @doc """
-  Convenience function which sends the stream to the conn.
+  Convenience function which sends the stream to the conn. The content of the Stream will be sent
+  with an appropriately configured `Content-Disposition` response header (as attachment), and the
+  name provided will be encoded for maximum compatibility with browsers.
 
   ## Examples
 
       stream
       |> Packmatic.Conn.send_chunked(conn, "download.zip")
   """
+
   def send_chunked(stream, conn, filename) do
     Enum.reduce_while(stream, chunk(conn, filename), &reduce_while/2)
   end
@@ -25,13 +28,16 @@ defmodule Packmatic.Conn do
     end)
   end
 
+  defp encode_header_value(filename) do
+    "attachment; filename*=UTF-8''" <> encode_filename(filename)
+  end
+
   defp chunk(conn, filename) do
     {:module, module} = Code.ensure_loaded(Plug.Conn)
-    value = "attachment; filename*=UTF-8''" <> encode_filename(filename)
 
     conn
     |> module.put_resp_content_type("application/zip")
-    |> module.put_resp_header("content-disposition", value)
+    |> module.put_resp_header("content-disposition", encode_header_value(filename))
     |> module.send_chunked(200)
   end
 
