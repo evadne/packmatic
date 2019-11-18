@@ -1,0 +1,7 @@
+*/.DS_Store
+.git/*
+.tm_properties
+_build
+deps
+doc
+*.dump
