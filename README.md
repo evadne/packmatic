@@ -40,11 +40,13 @@ With Packmatic, both the problem and the solution is drastically simplified. The
 
 To install Packmatic, add the following line in your application’s dependencies:
 
-    defp deps do
-      [
-        {:packmatic, "~> 0.1.0"}
-      ]
-    end
+```elixir
+defp deps do
+  [
+    {:packmatic, "~> 1.0.0"}
+  ]
+end
+```
 
 ## Usage
 
@@ -58,17 +60,21 @@ Each Source Entry within the Manifest specifies the source from where to obtain 
 
 The usual way to construct a Stream is as follows.
 
-    entries = [
-      [source: {:file, "/tmp/hello.pdf"}, path: "hello.pdf"],
-      [source: {:file, "/tmp/world.pdf"}, path: "world.pdf"],
-      [source: {:url, "https://example.com/foo.pdf"}, path: "foo/bar.pdf"]
-    ]
-    
-    stream = Packmatic.build_stream(entries)
+```elixir
+entries = [
+  [source: {:file, "/tmp/hello.pdf"}, path: "hello.pdf"],
+  [source: {:file, "/tmp/world.pdf"}, path: "world.pdf"],
+  [source: {:url, "https://example.com/foo.pdf"}, path: "foo/bar.pdf"]
+]
+
+stream = Packmatic.build_stream(entries)
+```
 
 If you desire, you may pass an additional option entry to `Packmatic.build_stream/2`, such as:
 
-    stream = Packmatic.build_stream(entries, on_error: :skip)
+```elixir
+stream = Packmatic.build_stream(entries, on_error: :skip)
+```
 
 Each Entry used to build the Stream is a 2-arity tuple, representing the Source Entry and the Path for the file.
 
@@ -76,14 +82,18 @@ Further, the Source Entry is a 2-arity tuple which represents the type of Source
 
 ### Writing Stream to File
 
-    stream
-    |> Stream.into(File.stream!(file_path, [:write]))
-    |> Stream.run()
+```elixir
+stream
+|> Stream.into(File.stream!(file_path, [:write]))
+|> Stream.run()
+```
 
 ### Writing Stream to Conn (with Plug)
 
-    stream
-    |> Packmatic.Conn.send_chunked(conn, "download.zip")
+```elixir
+stream
+|> Packmatic.Conn.send_chunked(conn, "download.zip")
+```
 
 When writing the stream to a chunked `Plug.Conn`, Packmatic automatically escapes relevant characters in the name and sets the Content Disposition to `attachment` for maximum browser compatibility under intended use.
 
@@ -125,25 +135,27 @@ Within Packmatic, there are four types of Sources:
 
     Given entries are `{source, path}` tuples, you can do this:
 
-        annotate_fun = fn entries ->
-          for {{source, path}, index} <- Enum.with_index(entries) do
-            path_components = Path.split(path)
-            {path_components, [filename]} = Enum.split(path_components, -1)
-            extname = Path.extname(filename)
-            basename = Path.basename(filename, extname)
-            path_components = path_components ++ ["#{basename} (#{index + 1})#{extname}"]
-            {source, Path.join(path_components)}
-          end
-        end
+    ```elixir
+    annotate_fun = fn entries ->
+      for {{source, path}, index} <- Enum.with_index(entries) do
+        path_components = Path.split(path)
+        {path_components, [filename]} = Enum.split(path_components, -1)
+        extname = Path.extname(filename)
+        basename = Path.basename(filename, extname)
+        path_components = path_components ++ ["#{basename} (#{index + 1})#{extname}"]
+        {source, Path.join(path_components)}
+      end
+    end
 
-        duplicates_fun = fn
-          [_ | [_ | _]] = entries -> annotate_fun.(entries)
-          entries -> entries
-        end
+    duplicates_fun = fn
+      [_ | [_ | _]] = entries -> annotate_fun.(entries)
+      entries -> entries
+    end
 
-        entries
-        |> Enum.group_by(& elem(&1, 1))
-        |> Enum.flat_map(&duplicates_fun.(elem(&1, 1)))
+    entries
+    |> Enum.group_by(& elem(&1, 1))
+    |> Enum.flat_map(&duplicates_fun.(elem(&1, 1)))
+    ```
 
 4.  You must ensure that paths conform to the target environment of your choice, for example macOS and Windows each has its limitations regarding how long paths can be.
 
