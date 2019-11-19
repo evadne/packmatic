@@ -42,7 +42,7 @@ To install Packmatic, add the following line in your application’s dependencie
 
     defp deps do
       [
-        {:packmatic, "~> 0.1.0"}
+        {:packmatic, "~> 1.0.0"}
       ]
     end
 
