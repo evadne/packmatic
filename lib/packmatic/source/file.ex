@@ -16,6 +16,10 @@ defmodule Packmatic.Source.File do
   defstruct path: nil, device: nil
 
   @impl Source
+  def validate(path) when is_binary(path) and path != "", do: :ok
+  def validate(_), do: {:error, :invalid}
+
+  @impl Source
   def init(path) do
     with {:ok, device} <- File.open(path, [:binary, :read]) do
       {:ok, %__MODULE__{path: path, device: device}}

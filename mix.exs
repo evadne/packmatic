@@ -42,6 +42,7 @@ defmodule Packmatic.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:httpotion, "~> 3.1.2"},
       {:ibrowse, "~> 4.4.0"},
+      {:mox, "~> 0.5.1", only: :test},
       {:teamcity_formatter, github: "prook/teamcity_formatter", only: [:test], runtime: false},
       {:timex, "~> 3.6.1", only: :test}
     ]

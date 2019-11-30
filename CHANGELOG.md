@@ -7,6 +7,26 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [Unreleased]
+
+### Added
+
+- Added support for custom Sources.
+  - Any module which implements `Packmatic.Source` can be used as a Source.
+
+### Changed
+
+- Revised `Packmatic.Source`.
+  - Added callback `validate/1` for entry validation.
+
+- Revised `Packmatic.Manifest.Entry`.
+  - Moved validation of Initialisation Arguments to Sources.
+
+### Fixed
+
+- Revised `Packmatic.Encoder`.
+  - Fixed acceptance of IO Lists, in case of custom Sources returning these instead of binaries.
+
 ## [1.0.0] — 18 November 2019
 
 ### Changed

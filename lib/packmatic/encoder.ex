@@ -101,7 +101,7 @@ defmodule Packmatic.Encoder do
 
   defp stream_encode(%{current: {_, source, _}} = state) do
     case Source.read(source) do
-      data when is_binary(data) -> stream_encode_data(data, state)
+      data when is_binary(data) or is_list(data) -> stream_encode_data(data, state)
       :eof -> stream_encode_eof(state)
       {:error, reason} -> stream_encode_error(reason, state)
     end
