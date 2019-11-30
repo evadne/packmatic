@@ -16,6 +16,10 @@ defmodule Packmatic.Source.Random do
   defstruct agent_pid: nil
 
   @impl Source
+  def validate(bytes) when is_number(bytes) and bytes > 0, do: :ok
+  def validate(_), do: {:error, :invalid}
+
+  @impl Source
   def init(bytes_remaining) do
     agent_fun = fn ->
       state = %__MODULE__.State{bytes_remaining: bytes_remaining}

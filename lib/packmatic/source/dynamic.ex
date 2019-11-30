@@ -50,6 +50,9 @@ defmodule Packmatic.Source.Dynamic do
   @type resolve_result_url :: {:ok, {:url, Source.URL.init_arg()}}
   @type resolve_result_error :: {:error, term()}
 
+  def validate(fun) when is_function(fun, 0), do: :ok
+  def validate(_), do: {:error, :invalid}
+
   def init(resolve_fun) do
     case resolve_fun.() do
       {:ok, {:file, path}} -> Source.File.init(path)

@@ -99,7 +99,7 @@ When writing the stream to a chunked `Plug.Conn`, Packmatic automatically escape
 
 ## Source Types
 
-Within Packmatic, there are four types of Sources:
+Packmatic supports reading from any Source which conforms to the `Packmatic.Source` behaviour. To aid adoption and general implementation, there are four types of built-in Sources:
 
 1.  **File,** representing content on disk, useful when the content is already available and only needs to be integrated.
 
@@ -124,6 +124,8 @@ Within Packmatic, there are four types of Sources:
     Example: `{:dynamic, fn -> {:ok, {:random, 1048576}} end}`.
 
     See `Packmatic.Source.Dynamic`.
+
+If you would like to use a custom Source implementation., see `Packmatic.Source`.
 
 ## Notes
 

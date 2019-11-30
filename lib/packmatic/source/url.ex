@@ -16,6 +16,10 @@ defmodule Packmatic.Source.URL do
   defstruct url: nil, id: nil
 
   @impl Source
+  def validate(url) when is_binary(url) and url != "", do: :ok
+  def validate(_), do: {:error, :invalid}
+
+  @impl Source
   def init(url) do
     with %{host: host} <- URI.parse(url),
          options = httpotion_options(host),
