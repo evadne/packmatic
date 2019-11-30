@@ -6,6 +6,16 @@ By using a Stream, the caller can compose it within the confines of Plug’s req
 
 The generated archive uses Zip64, and works with individual files that are larger than 4GB. See the Compatibility section for more information.
 
+* * *
+
+- [Design Rationale](#design-rationale)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Source Types](#source-types)
+- [Notes](#notes)
+
+* * *
+
 ## Design Rationale
 
 ### Problem
@@ -50,37 +60,53 @@ end
 
 ## Usage
 
-In order to use Packmatic, you will first create such a Stream by `Packmatic.build_stream/2`. You can then send it off for download with help from `Packmatic.Conn.send_chunked/3`.
+The general way to use Packmatic within your application is to generate a `Stream` dynamically by passing a list of Source Entries directly to `Packmatic.build_stream/2`. This gives you a standard Stream which you can then send it off for download with help from `Packmatic.Conn.send_chunked/3`.
 
-Internally, this is powered by `Packmatic.Encoder`, which consumes the Entries within a built Manifest iteratively at the pace set by the client’s download connection.
+If you need more control, for example if you desire context separation, or if you wish to validate that the entries are valid prior to vending a Stream, you may generate a `Packmatic.Manifest` struct ahead of time, then pass it to `Packmatic.build_stream/2` at a later time. See `Packmatic.Manifest` for more information.
 
-Each Source Entry within the Manifest specifies the source from where to obtain the content of a particular file to be placed in the package, and which path to put it under; it is your own responsibility to ensure that paths are not duplicated (see the Notes for an example).
+In either case, the Stream is powered by `Packmatic.Encoder`, which consumes the Entries within the Manifest iteratively as the Stream is consumed, at the pace set by the client’s download connection.
 
-### Building Stream
+### Building the Stream with Entries
 
 The usual way to construct a Stream is as follows.
 
 ```elixir
 entries = [
   [source: {:file, "/tmp/hello.pdf"}, path: "hello.pdf"],
-  [source: {:file, "/tmp/world.pdf"}, path: "world.pdf"],
+  [source: {:file, "/tmp/world.pdf"}, path: "world.pdf", timestamp: DateTime.utc_now()],
   [source: {:url, "https://example.com/foo.pdf"}, path: "foo/bar.pdf"]
 ]
 
 stream = Packmatic.build_stream(entries)
 ```
 
-If you desire, you may pass an additional option entry to `Packmatic.build_stream/2`, such as:
+As you can see, each Entry used to build the Stream (under `source:`) is a keyword list, which concerns itself with the source, the path, and optionally a timestamp:
+
+-  `source:` represents a 2-arity tuple, representing the name of the Source and its Initialisation Argument. This data structure specifies the nature of the data, and how to obtain its content.
+
+-  `path:` represents the path in the Zip file that the content should be put under; it is your own responsibility to ensure that paths are not duplicated (see the Notes for an example).
+
+-  `timestamp:` is optional, and represents the creation/modification timestamp of the file. Packmatic emits both the basic form (DOS / FAT) of the timestamp, and the Extended Timestamp Extra Field which represents the same value with higher precision and range.
+
+Packmatic supports reading from any Source which conforms to the `Packmatic.Source` behaviour. To aid adoption and general implementation, there are built-in Sources as well; this is documented under [Source Types][#source-types]. 
+
+### Building a Manifest
+
+If you wish, you can use the `Packmatic.Manifest` module to build a Manifest ahead-of-time, in order to validate the Entries prior to vending the Stream.
+
+Manifests can be created iteratively by calling `Packmatic.Manifest.prepend/2` against an existing Manifest, or by calling `Packmatic.Manifest.create/1` with a list of Entries created elsewhere. For more information, see `Packmatic.Manifest`.
+
+### Specifying Error Behaviour
+
+By default, Packmatic fails the Stream when any Entry fails to process for any reason. If you desire, you may pass an additional option to `Packmatic.build_stream/2` in order to modify this behaviour:
 
 ```elixir
 stream = Packmatic.build_stream(entries, on_error: :skip)
 ```
 
-Each Entry used to build the Stream is a 2-arity tuple, representing the Source Entry and the Path for the file.
-
-Further, the Source Entry is a 2-arity tuple which represents the type of Source and the initialising argument of that type of Source. See [Source Types](#source-types).
-
 ### Writing Stream to File
+
+You can use the standard `Stream.into/2` call to operate on the Stream:
 
 ```elixir
 stream
@@ -89,6 +115,8 @@ stream
 ```
 
 ### Writing Stream to Conn (with Plug)
+
+You can use the bundled `Packmatic.Conn` module to send a Packmatic stream down the wire:
 
 ```elixir
 stream
@@ -99,33 +127,43 @@ When writing the stream to a chunked `Plug.Conn`, Packmatic automatically escape
 
 ## Source Types
 
-Packmatic supports reading from any Source which conforms to the `Packmatic.Source` behaviour. To aid adoption and general implementation, there are four types of built-in Sources:
+Packmatic has default Source types that you can use easily when building Manifests and/or Streams:
 
-1.  **File,** representing content on disk, useful when the content is already available and only needs to be integrated.
+1.  **File,** representing content on disk, useful when the content is already available and only needs to be integrated. See `Packmatic.Source.File`.
 
-    Example: `{:file, "/tmp/hello/pdf"}`.
+2.  **URL,** representing content that is available remotely. Packmatic will run a chunked download routine to incrementally download and archive available chunks. See `Packmatic.Source.URL`.
 
-    See `Packmatic.Source.File`.
+3.  **Random,** representing randomly generated bytes which is useful for testing. See `Packmatic.Source.Random`.
 
-2.  **URL,** representing content that is available remotely. Packmatic will run a chunked download routine to incrementally download and archive available chunks.
+4.  **Dynamic,** representing a dynamically resolved Source, which is ultimately fulfilled by pulling content from either a File or an URL. If you have any need to inject a dynamically generated file, you may use this Source type to do it. This also has the benefit of avoiding expensive computation work in case the customer abandons the download midway. See `Packmatic.Source.Dynamic`.
 
-    Example: `{:url, "https://example.com/hello/pdf"}`.
+These Streams can be referred by their internal aliases:
 
-    See `Packmatic.Source.URL`.
+- `{:file, "/tmp/hello/pdf"}`.
+- `{:url, "https://example.com/hello/pdf"}`.
+- `{:random, 1048576}`.
+- `{:dynamic, fn -> {:ok, {:random, 1048576}} end}`.
 
-3.  **Random,** representing randomly generated bytes which is useful for testing.
+Alternatively, they can also be referred by module names:
 
-    Example: `{:random, 1048576}`.
+- `{Packmatic.Source.File, "/tmp/hello/pdf"}`.
+- `{Packmatic.Source.URL, "https://example.com/hello/pdf"}`.
+- `{Packmatic.Source.Random, 1048576}`.
+- `{Packmatic.Source.Dynamic, fn -> {:ok, {:random, 1048576}} end}`.
 
-    See `Packmatic.Source.Random`.
+### Dynamic & Custom Sources
 
-4.  **Dynamic,** representing a dynamically resolved Source, which is ultimately fulfilled by pulling content from either a File or an URL. If you have any need to inject a dynamically generated file, you may use this Source type to do it. This also has the benefit of avoiding expensive computation work in case the customer abandons the download midway.
+If you have an use case where you wish to dynamically generate the content that goes into the archive, you may either use the Dynamic source or implement a Custom Source.
 
-    Example: `{:dynamic, fn -> {:ok, {:random, 1048576}} end}`.
+For example, if the amount of dynamic computation is small, but the results are time-sensitive, like when you already have Object IDs and just need to pre-sign URLs, you can use a Dynamic source with a curried function:
 
-    See `Packmatic.Source.Dynamic`.
+    {:dynamic, MyApp.Packmatic.build_dynamic_fun(object_id)}
 
-If you would like to use a custom Source implementation., see `Packmatic.Source`.
+If you have a different use case, for example if you need to pull data from a FTP server (which uses a protocol that Packmatic does not have a bundled Source to work with), you can implement a module that conforms to the `Packmatic.Source` behaviour, and pass it:
+
+    {MyApp.Packmatic.Source.FTP, "ftp://example.com/my.docx"}
+
+See `Packmatic.Source` for more information.
 
 ## Notes
 
