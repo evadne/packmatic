@@ -64,9 +64,11 @@ defmodule Packmatic.MixProject do
       nest_modules_by_prefix: [
         Packmatic.Manifest,
         Packmatic.Source,
-        Packmatic.Field
+        Packmatic.Field,
+        Packmatic.Event
       ],
       groups_for_modules: [
+        Events: [~r/Packmatic\.Event/],
         "Data Structs": [~r/\.Field/],
         Helpers: [Packmatic.Conn]
       ]
