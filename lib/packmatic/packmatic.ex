@@ -8,12 +8,10 @@ defmodule Packmatic do
   alias __MODULE__.Encoder
   alias __MODULE__.StreamError
 
-  manifest = quote do: Manifest.t()
-  manifest_entry = quote do: Manifest.Entry.t() | Manifest.Entry.proplist()
-  options = quote do: [Encoder.option()]
-
-  @spec build_stream(unquote(manifest), unquote(options)) :: term()
-  @spec build_stream(nonempty_list(unquote(manifest_entry)), unquote(options)) :: term()
+  @spec build_stream(manifest | manifest_entries, options) :: Enumerable.t()
+        when manifest: Manifest.t(),
+             manifest_entries: nonempty_list(Manifest.Entry.t() | Manifest.Entry.proplist()),
+             options: [Encoder.option()]
 
   @doc """
   Builds a Stream which can be consumed to construct a Zip file from various sources, as specified
