@@ -27,6 +27,9 @@ defmodule Packmatic.Source do
   @doc "Iterates the Source and return data as an IO List, `:eof`, or failure."
   @callback read(struct()) :: iodata() | :eof | {:error, term()}
 
+  @doc "Closes a Source (i.e. a file descriptor or http connection)"
+  @callback close(struct()) :: :ok | {:error, term()}
+
   defmodule Builder do
     @moduledoc false
 
@@ -71,4 +74,7 @@ defmodule Packmatic.Source do
 
   @doc "Consumes bytes off an initialised Source. Called by `Packmatic.Encoder`."
   def read(%{__struct__: module} = source), do: module.read(source)
+
+  @doc "Closes a Source after it has been fully processed. Called by `Packmatic.Encoder`."
+  def close(%{__struct__: module} = source), do: module.close(source)
 end

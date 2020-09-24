@@ -42,6 +42,11 @@ defmodule Packmatic.Source.URL do
     end
   end
 
+  @impl Source
+  def close(%__MODULE__{id: id}) do
+    :ibrowse.stream_close(id)
+  end
+
   @otp_app Mix.Project.config()[:app]
   @default_whole_file_timeout 1000 * 60 * 30
   @default_max_sessions 100

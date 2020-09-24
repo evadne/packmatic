@@ -27,6 +27,11 @@ defmodule Packmatic.Source.File do
     IO.binread(source.device, get_chunk_size())
   end
 
+  @impl Source
+  def close(source) do
+    File.close(source.device)
+  end
+
   @otp_app Mix.Project.config()[:app]
   @default_chunk_size 4096
 

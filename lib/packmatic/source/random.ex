@@ -37,10 +37,14 @@ defmodule Packmatic.Source.Random do
     end
 
     with <<>> <- Agent.get_and_update(source.agent_pid, get_and_update_fun) do
-      :ok = Agent.stop(source.agent_pid)
       :eof
     else
       result -> result
     end
+  end
+
+  @impl Source
+  def close(%__MODULE__{} = source) do
+    Agent.stop(source.agent_pid)
   end
 end
