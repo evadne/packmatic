@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Added support for custom Sources.
   - Any module which implements `Packmatic.Source` can be used as a Source.
 
+- Added support for Encoder Events.
+  - Added the `on_event` option to the Encoder which can be used to receive events.
+  - See documentation for `Packmatic.Event`.
+
 ### Changed
 
 - Revised `Packmatic.Source`.
@@ -21,6 +25,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 - Revised `Packmatic.Manifest.Entry`.
   - Moved validation of Initialisation Arguments to Sources.
+
+- Revised `Packmatic.Source.File`.
+  - Added explicit cleanup logic.
+
+- Revised `Packmatic.Source.URL`.
+  - Added explicit cleanup logic.
 
 ### Fixed
 
