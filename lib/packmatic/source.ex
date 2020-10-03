@@ -103,6 +103,7 @@ defmodule Packmatic.Source do
   Called by `Packmatic.Manifest.Entry`.
   """
   def validate(entry)
+
   def validate({name, init_arg}) do
     with {:module, module} <- resolve(name) do
       module.validate(init_arg)
@@ -116,6 +117,7 @@ defmodule Packmatic.Source do
   Called by `Packmatic.Encoder`.
   """
   def build(entry)
+
   def build({name, init_arg}) do
     with {:module, module} <- resolve(name) do
       module.init(init_arg)
