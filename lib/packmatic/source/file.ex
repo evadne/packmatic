@@ -28,7 +28,12 @@ defmodule Packmatic.Source.File do
 
   @impl Source
   def read(source) do
-    IO.binread(source.device, get_chunk_size())
+    with :eof <- IO.binread(source.device, get_chunk_size()) do
+      :ok = File.close(source.device)
+      :eof
+    else
+      data -> data
+    end
   end
 
   @otp_app Mix.Project.config()[:app]
