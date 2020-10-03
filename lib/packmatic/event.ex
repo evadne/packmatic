@@ -24,20 +24,29 @@ defmodule Packmatic.Event do
       returned EOF).
 
   6.  `Packmatic.Event.StreamEnded`: Sent when the Stream has completed journaling.
+
+  Please note that more event types may be added in the future.
   """
 
   @typedoc """
   Represents an Event that will be passed to the handler.
   """
-  @type event :: struct()
+  @type event ::
+          __MODULE__.StreamStarted.t()
+          | __MODULE__.StreamEnded.t()
+          | __MODULE__.EntryStarted.t()
+          | __MODULE__.EntryUpdated.t()
+          | __MODULE__.EntryFailed.t()
+          | __MODULE__.EntryCompleted.t()
 
   @typedoc """
   Represents the callback function passed to the Encoder.
 
   The callback function takes 1 argument, which is the actual Event that is raised by Packmatic.
-  The Event, `t:event/0`, is a pre-defined structs under `Packmatic.Event`. Please keep in mind
-  that more events may be added in the future, so you should always include a fallback clause
-  in your handler function.
+  The Event, `t:event/0`, is one of the pre-defined structs under the `Packmatic.Event` namespace.
+
+  Please keep in mind that more events may be added in the future, so you should always include a
+  fallback clause in your handler function.
 
   Handlers are called from the same process that the Stream is being iterated from, which allows
   you to control what happens to it. Should you not wish to interrupt the Encoder, return `:ok`.
@@ -122,6 +131,7 @@ defmodule Packmatic.Event do
             entry: Manifest.Entry.t()
           }
 
+    @enforce_keys ~w(stream_id entry)a
     defstruct stream_id: nil, entry: nil
   end
 
@@ -138,6 +148,7 @@ defmodule Packmatic.Event do
             reason: term()
           }
 
+    @enforce_keys ~w(stream_id entry reason)a
     defstruct stream_id: nil, entry: nil, reason: nil
   end
 end
