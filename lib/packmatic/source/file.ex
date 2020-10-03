@@ -16,6 +16,10 @@ defmodule Packmatic.Source.File do
   defstruct path: nil, device: nil
 
   @impl Source
+  def validate(path) when is_binary(path) and path != "", do: :ok
+  def validate(_), do: {:error, :invalid}
+
+  @impl Source
   def init(path) do
     with {:ok, device} <- File.open(path, [:binary, :read]) do
       {:ok, %__MODULE__{path: path, device: device}}
@@ -24,7 +28,12 @@ defmodule Packmatic.Source.File do
 
   @impl Source
   def read(source) do
-    IO.binread(source.device, get_chunk_size())
+    with :eof <- IO.binread(source.device, get_chunk_size()) do
+      :ok = File.close(source.device)
+      :eof
+    else
+      data -> data
+    end
   end
 
   @otp_app Mix.Project.config()[:app]

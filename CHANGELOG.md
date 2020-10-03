@@ -7,6 +7,36 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [1.1.0] — 3 October 2020
+
+### Added
+
+- Added support for custom Sources.
+  - Any module which implements `Packmatic.Source` can be used as a Source.
+
+- Added support for Encoder Events.
+  - Added the `on_event` option to the Encoder which can be used to receive events.
+  - See documentation for `Packmatic.Event`.
+
+### Changed
+
+- Revised `Packmatic.Source`.
+  - Added callback `validate/1` for entry validation.
+
+- Revised `Packmatic.Manifest.Entry`.
+  - Moved validation of Initialisation Arguments to Sources.
+
+- Revised `Packmatic.Source.File`.
+  - Added explicit cleanup logic.
+
+- Revised `Packmatic.Source.URL`.
+  - Added explicit cleanup logic.
+
+### Fixed
+
+- Revised `Packmatic.Encoder`.
+  - Fixed acceptance of IO Lists, in case of custom Sources returning these instead of binaries.
+
 ## [1.0.0] — 18 November 2019
 
 ### Changed
@@ -45,5 +75,6 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Initial Release.
 
 [unreleased]: https://github.com/evadne/packmatic/compare/master...develop
+[1.1.0]: https://github.com/evadne/packmatic/releases/tag/v1.1.0
 [1.0.0]: https://github.com/evadne/packmatic/releases/tag/v1.0.0
 [0.1.0]: https://github.com/evadne/packmatic/releases/tag/v0.1.0

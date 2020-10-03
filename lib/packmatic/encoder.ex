@@ -33,27 +33,57 @@ defmodule Packmatic.Encoder do
   """
 
   alias Packmatic.Manifest
-  alias Packmatic.Source
-  alias Packmatic.Field
-  alias __MODULE__.EncodingState
-  alias __MODULE__.JournalingState
+  alias Packmatic.Event
+  alias Packmatic.Encoder.{Encoding, EncodingState, Journaling, JournalingState}
 
-  @type option :: {:on_error, :skip | :halt}
-  @type ok_start_encoding :: {:ok, :encoding, EncodingState.t()}
-  @type ok_encoding :: {:ok, iolist(), :encoding, EncodingState.t()}
-  @type ok_journaling :: {:ok, iolist(), :journaling, JournalingState.t()}
-  @type ok_done :: {:ok, iolist(), :done, nil}
-  @type ok_halt :: {:ok, :halt, :done, nil}
-  @type error :: {:error, term()}
+  @typedoc """
+  Represents possible options to use with the Encoder.
 
-  @spec stream_start(Manifest.valid(), [option]) :: ok_start_encoding
-  @spec stream_start(Manifest.invalid(), [option]) :: {:error, %Manifest{valid?: false}}
-  @spec stream_next(:encoding, EncodingState.t()) :: ok_encoding | ok_journaling | error
-  @spec stream_next(:journaling, JournalingState.t()) :: ok_journaling | ok_done
-  @spec stream_next(:done, nil) :: ok_halt
-  @spec stream_after(:done, nil) :: :ok
+  - `on_error` can be set to either `:skip` or `:halt`, which controls how the Encoder behaves
+    when there is an erorr with one of the Sources.
+    
+  - `on_event` can be set to a function which will be called when events are raised by the Encoder
+    during its lifecycle. See `Packmatic.Event` for further information.
+  """
+  @type option :: {:on_error, :skip | :halt} | {:on_event, Event.handler_fun()}
 
-  import :erlang, only: [iolist_size: 1]
+  @typedoc """
+  Represents an unique identifier of the Stream in operation. This allows you to distinguish
+  between multiple series of Events raised against the same Manifest in multiple Streams
+  concurrently.
+  """
+  @opaque stream_id :: reference()
+
+  @typedoc """
+  Represents the intenral state used when encoding entries.
+  """
+  @opaque encoding_state :: EncodingState.t()
+
+  @typedoc """
+  Represents the internal state used when journaling entries.
+  """
+  @opaque journaling_state :: JournalingState.t()
+
+  @spec stream_start(manifest, [option]) :: {:ok, :encoding, encoding_state}
+        when manifest: Manifest.valid()
+
+  @spec stream_start(manifest, [option]) :: {:error, manifest}
+        when manifest: Manifest.invalid()
+
+  @spec stream_next(:encoding, encoding_state) ::
+          {:ok, iodata(), :encoding, encoding_state}
+          | {:ok, iodata(), :journaling, journaling_state}
+          | {:error, term()}
+
+  @spec stream_next(:journaling, journaling_state) ::
+          {:ok, iodata(), :journaling, journaling_state}
+          | {:ok, iodata(), :done, nil}
+
+  @spec stream_next(:done, nil) ::
+          {:ok, :halt, :done, nil}
+
+  @spec stream_after(:done, nil) ::
+          :ok
 
   @doc """
   Starts the Stream.
@@ -61,14 +91,7 @@ defmodule Packmatic.Encoder do
   If the Manifest provided is invalid, the call will not succeed and the invalid Manifest will be
   returned.
   """
-  def stream_start(manifest, options) do
-    with %{valid?: true} <- manifest do
-      on_error = Keyword.get(options, :on_error, :halt)
-      {:ok, :encoding, %EncodingState{remaining: manifest.entries, on_error: on_error}}
-    else
-      manifest -> {:error, manifest}
-    end
-  end
+  def stream_start(manifest, options), do: stream_encoding_start(manifest, options)
 
   @doc """
   Iterates the Stream.
@@ -83,8 +106,8 @@ defmodule Packmatic.Encoder do
   When the Stream is in `:done` status, it can not be iterated further.
   """
   def stream_next(status, state)
-  def stream_next(:encoding, %EncodingState{} = state), do: stream_encode(state)
-  def stream_next(:journaling, %JournalingState{} = state), do: stream_journal(state)
+  def stream_next(:encoding, state), do: stream_encoding_next(state)
+  def stream_next(:journaling, state), do: stream_journaling_next(state)
   def stream_next(:done, nil), do: {:ok, :halt, :done, nil}
 
   @doc """
@@ -92,158 +115,31 @@ defmodule Packmatic.Encoder do
   """
   def stream_after(_status, _state), do: :ok
 
-  defp stream_encode(%{current: nil, remaining: [entry | rest]} = state) do
-    case Source.build(entry.source) do
-      {:ok, source} -> stream_encode_start(entry, source, %{state | remaining: rest})
-      {:error, reason} -> stream_encode_start_error(entry, reason, %{state | remaining: rest})
+  defp stream_encoding_start(manifest, options) do
+    case Encoding.encoding_start(manifest, options) do
+      {:cont, state} -> {:ok, :encoding, state}
+      {:halt, {:error, reason}} -> {:error, reason}
     end
   end
 
-  defp stream_encode(%{current: {_, source, _}} = state) do
-    case Source.read(source) do
-      data when is_binary(data) -> stream_encode_data(data, state)
-      :eof -> stream_encode_eof(state)
-      {:error, reason} -> stream_encode_error(reason, state)
+  defp stream_encoding_next(state) do
+    case Encoding.encoding_next(state) do
+      {:cont, data, state} -> {:ok, data, :encoding, state}
+      {:done, state} -> stream_journaling_start(state)
+      {:halt, {:error, reason}} -> {:error, reason}
     end
   end
 
-  defp stream_encode(%{remaining: []} = state) do
-    state = zstream_close(state)
-    state = %JournalingState{remaining: state.encoded, offset: state.bytes_emitted}
-    {:ok, [], :journaling, state}
+  defp stream_journaling_start(state) do
+    case Journaling.journaling_start(state) do
+      {:cont, state} -> {:ok, [], :journaling, state}
+    end
   end
 
-  defp stream_encode_start(entry, source, state) do
-    data = encode_local_file_header(entry)
-    info = %EncodingState.EntryInfo{offset: state.bytes_emitted}
-    state = zstream_reset(state)
-    state = %{state | current: {entry, source, info}}
-    stream_emit(data, :encoding, state)
-  end
-
-  defp stream_encode_start_error(entry, reason, %{on_error: :skip} = state) do
-    state = %{state | encoded: [{entry, {:error, reason}} | state.encoded]}
-    stream_emit([], :encoding, state)
-  end
-
-  defp stream_encode_start_error(_entry, reason, %{on_error: :halt}) do
-    {:error, reason}
-  end
-
-  defp stream_encode_data(data, %{current: {entry, source, info}} = state) do
-    data_compressed = :zlib.deflate(state.zstream, data, :full)
-    info = %{info | checksum: :erlang.crc32(info.checksum, data)}
-    info = %{info | size_compressed: info.size_compressed + iolist_size(data_compressed)}
-    info = %{info | size: info.size + iolist_size(data)}
-    state = %{state | current: {entry, source, info}}
-    stream_emit([data_compressed], :encoding, state)
-  end
-
-  defp stream_encode_eof(%{current: {entry, _source, info}} = state) do
-    data_compressed = :zlib.deflate(state.zstream, <<>>, :finish)
-    info = %{info | size_compressed: info.size_compressed + iolist_size(data_compressed)}
-    data_descriptor = encode_local_data_descriptor(info)
-    state = %{state | current: nil, encoded: [{entry, {:ok, info}} | state.encoded]}
-    stream_emit([[data_compressed, data_descriptor]], :encoding, state)
-  end
-
-  defp stream_encode_error(reason, %{current: {entry, _, _}, on_error: :skip} = state) do
-    state = %{state | current: nil, encoded: [{entry, {:error, reason}} | state.encoded]}
-    stream_emit([], :encoding, state)
-  end
-
-  defp stream_encode_error(reason, %{on_error: :halt}) do
-    {:error, reason}
-  end
-
-  defp stream_journal(%{current: {entry, info}} = state) do
-    data = encode_central_file_header(entry, info)
-    state = %{state | current: nil, entries_emitted: state.entries_emitted + 1}
-    stream_emit(data, :journaling, state)
-  end
-
-  defp stream_journal(%{current: nil, remaining: []} = state) do
-    data = encode_central_directory_end(state)
-    stream_emit(data, :done, nil)
-  end
-
-  defp stream_journal(%{current: nil, remaining: [{entry, {:ok, info}} | rest]} = state) do
-    stream_journal(%{state | current: {entry, info}, remaining: rest})
-  end
-
-  defp stream_journal(%{current: nil, remaining: [{_, {:error, _}} | rest]} = state) do
-    stream_journal(%{state | remaining: rest})
-  end
-
-  defp stream_emit(item, status, %{bytes_emitted: _} = state) do
-    {:ok, item, status, %{state | bytes_emitted: state.bytes_emitted + iolist_size(item)}}
-  end
-
-  defp stream_emit(item, status, state) do
-    {:ok, item, status, state}
-  end
-
-  defp zstream_reset(%{zstream: nil} = state) do
-    # See Erlang/OTP source for :zip.put_z_file/10
-    # See http://erlang.org/doc/man/zlib.html#deflateInit-1
-    #
-    # Quote:
-    # > A negative WindowBits value suppresses the zlib header (and checksum)
-    # > from the stream. Notice that the zlib source mentions this only as a
-    # > undocumented feature.
-    #
-    # With the default WindowBits value of 15, deflate fails on macOS.
-
-    zstream = :zlib.open()
-    :ok = :zlib.deflateInit(zstream, :default, :deflated, -15, 8, :default)
-    %{state | zstream: zstream}
-  end
-
-  defp zstream_reset(%{zstream: zstream} = state) do
-    :ok = :zlib.deflateReset(zstream)
-    state
-  end
-
-  defp zstream_close(%{zstream: nil} = state) do
-    state
-  end
-
-  defp zstream_close(%{zstream: zstream} = state) do
-    :ok = :zlib.close(zstream)
-    %{state | zstream: nil}
-  end
-
-  defp encode_local_file_header(entry) do
-    Field.encode(%Field.Local.FileHeader{
-      path: entry.path,
-      timestamp: entry.timestamp
-    })
-  end
-
-  defp encode_local_data_descriptor(info) do
-    Field.encode(%Field.Local.DataDescriptor{
-      checksum: info.checksum,
-      size_compressed: info.size_compressed,
-      size: info.size
-    })
-  end
-
-  defp encode_central_file_header(entry, info) do
-    Field.encode(%Field.Central.FileHeader{
-      offset: info.offset,
-      path: entry.path,
-      checksum: info.checksum,
-      size_compressed: info.size_compressed,
-      size: info.size,
-      timestamp: entry.timestamp
-    })
-  end
-
-  defp encode_central_directory_end(state) do
-    Field.encode(%Field.Central.DirectoryEnd{
-      entries_count: state.entries_emitted,
-      entries_size: state.bytes_emitted,
-      entries_offset: state.offset
-    })
+  defp stream_journaling_next(state) do
+    case Journaling.journaling_next(state) do
+      {:cont, data, state} -> {:ok, data, :journaling, state}
+      {:done, data} -> {:ok, data, :done, nil}
+    end
   end
 end

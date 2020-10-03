@@ -26,13 +26,7 @@ end
 
 defimpl Packmatic.Validator.Target, for: Packmatic.Manifest.Entry do
   def validate(%{source: nil}, :source), do: {:error, :missing}
-  def validate(%{source: {:file, ""}}, :source), do: {:error, :invalid}
-  def validate(%{source: {:file, path}}, :source) when is_binary(path), do: :ok
-  def validate(%{source: {:url, ""}}, :source), do: {:error, :invalid}
-  def validate(%{source: {:url, url}}, :source) when is_binary(url), do: :ok
-  def validate(%{source: {:dynamic, fun}}, :source) when is_function(fun, 0), do: :ok
-  def validate(%{source: {:random, bytes}}, :source) when is_number(bytes) and bytes > 0, do: :ok
-  def validate(%{source: _}, :source), do: {:error, :invalid}
+  def validate(%{source: entry}, :source), do: Packmatic.Source.validate(entry)
 
   def validate(%{path: nil}, :path), do: {:error, :missing}
   def validate(%{path: _}, :path), do: :ok

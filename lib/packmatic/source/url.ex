@@ -11,16 +11,20 @@ defmodule Packmatic.Source.URL do
   @type init_result :: {:ok, t}
   @spec init(init_arg) :: init_result
 
-  @type t :: %__MODULE__{url: String.t(), id: term()}
-  @enforce_keys ~w(url id)a
-  defstruct url: nil, id: nil
+  @type t :: %__MODULE__{url: String.t(), stream_id: term()}
+  @enforce_keys ~w(url stream_id)a
+  defstruct url: nil, stream_id: nil
+
+  @impl Source
+  def validate(url) when is_binary(url) and url != "", do: :ok
+  def validate(_), do: {:error, :invalid}
 
   @impl Source
   def init(url) do
     with %{host: host} <- URI.parse(url),
          options = httpotion_options(host),
-         %HTTPotion.AsyncResponse{id: id} <- HTTPotion.get(url, options) do
-      {:ok, %__MODULE__{url: url, id: id}}
+         %HTTPotion.AsyncResponse{id: stream_id} <- HTTPotion.get(url, options) do
+      {:ok, %__MODULE__{url: url, stream_id: stream_id}}
     else
       {:error, reason} -> {:error, reason}
       %HTTPotion.ErrorResponse{message: message} -> {:error, message}
@@ -28,17 +32,25 @@ defmodule Packmatic.Source.URL do
   end
 
   @impl Source
-  def read(%__MODULE__{id: id}) do
-    with :ok <- :ibrowse.stream_next(id) do
+  def read(%__MODULE__{stream_id: stream_id}) do
+    with data when is_binary(data) <- read_receive_next(stream_id) do
+      data
+    else
+      value ->
+        _ = :ibrowse.stream_close(stream_id)
+        value
+    end
+  end
+
+  defp read_receive_next(stream_id) do
+    with :ok <- :ibrowse.stream_next(stream_id) do
       receive do
         %HTTPotion.AsyncHeaders{status_code: 200} -> <<>>
         %HTTPotion.AsyncHeaders{status_code: status} -> {:error, {:unsupported_status, status}}
-        %HTTPotion.AsyncChunk{chunk: chunk, id: ^id} -> chunk
-        %HTTPotion.AsyncEnd{id: ^id} -> :eof
-        %HTTPotion.AsyncTimeout{id: ^id} -> {:error, :timeout}
+        %HTTPotion.AsyncChunk{chunk: chunk, id: ^stream_id} -> chunk
+        %HTTPotion.AsyncEnd{id: ^stream_id} -> :eof
+        %HTTPotion.AsyncTimeout{id: ^stream_id} -> {:error, :timeout}
       end
-    else
-      {:error, reason} -> {:error, reason}
     end
   end
 
