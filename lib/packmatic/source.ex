@@ -46,6 +46,13 @@ defmodule Packmatic.Source do
       iex(2)> {:ok, state} = Packmatic.Source.build({:file, file_path})
       iex(3)> state.__struct__
       Packmatic.Source.File
+
+  ### Notes
+
+  When implementing a custom Source which uses an external data provider (for example reading from
+  a file), remember to perform any cleanup required within the `read/1` callback if the Source is
+  not expected to return any further data, for example if the file has been read completely or if
+  there has been an error.
   """
 
   @typedoc """
