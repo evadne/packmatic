@@ -89,7 +89,7 @@ As you can see, each Entry used to build the Stream (under `source:`) is a keywo
 
 -  `timestamp:` is optional, and represents the creation/modification timestamp of the file. Packmatic emits both the basic form (DOS / FAT) of the timestamp, and the Extended Timestamp Extra Field which represents the same value with higher precision and range.
 
-Packmatic supports reading from any Source which conforms to the `Packmatic.Source` behaviour. To aid adoption and general implementation, there are built-in Sources as well; this is documented under [Source Types][#source-types]. 
+Packmatic supports reading from any Source which conforms to the `Packmatic.Source` behaviour. To aid adoption and general implementation, there are built-in Sources as well; this is documented under [Source Types](#source-types). 
 
 ### Building a Manifest
 
