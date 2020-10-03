@@ -12,6 +12,7 @@ The generated archive uses Zip64, and works with individual files that are large
 - [Installation](#installation)
 - [Usage](#usage)
 - [Source Types](#source-types)
+- [Events](#events)
 - [Notes](#notes)
 
 * * *
@@ -165,6 +166,38 @@ If you have a different use case, for example if you need to pull data from a FT
 
 See `Packmatic.Source` for more information.
 
+## Events
+
+The Encoder can be configured to emit events in order to enable feedback elsewhere in your application, for example:
+
+```elixir
+entries = [
+  [source: {:file, "/tmp/hello.pdf"}, path: "hello.pdf"],
+  [source: {:file, "/tmp/world.pdf"}, path: "world.pdf", timestamp: DateTime.utc_now()],
+  [source: {:url, "https://example.com/foo.pdf"}, path: "foo/bar.pdf"]
+]
+
+entries_count = length(entries)
+entries_completed_agent = Agent.start(fn -> 0 end)
+
+handler_fun = fn event ->
+  case event do
+    %Packmatic.Event.EntryCompleted{} ->
+      count = Agent.get_and_update(entries_completed_agent, & &1 + 1)
+      IO.puts "#{count} of #{entries_count} encoded"
+    %Packmatic.Event.EntryCompleted{} ->
+      :ok = Agent.stop(entries_completed_agent)
+      :ok
+    _ ->
+      :ok
+  end
+end
+
+stream = Packmatic.build_stream(entries, on_event: handler_fun)
+```
+
+See documentation for `Packmatic.Event` for a complete list of Event types.
+
 ## Notes
 
 1.  As with any user-generated content, you should exercise caution when building the Manifest, and ensure that only content that the User is entitled to retrieve is included.
@@ -233,7 +266,17 @@ During design and prototype development of this library, the Author has drawn in
 - [ctrabant/fdzipstream](https://github.com/CTrabant/fdzipstream)
 - [dgvncsz0f/zipflow](https://github.com/dgvncsz0f/zipflow)
 
+The Author wishes to thank the following individuals:
+
+- [Alvise Susmel][alvises] for proposing and testing [Encoder Events][gh-3]
+- [Christoph Geschwind][1st8] for highlighting [the need for explicit cleanup logic][gh-8]
+
 ## Reference
 
 - https://users.cs.jmu.edu/buchhofp/forensics/formats/pkzip.html
 - https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+
+[1st8]: https://github.com/1st8
+[alvises]: https://github.com/alvises
+[gh-3]: https://github.com/evadne/packmatic/issues/3
+[gh-8]: https://github.com/evadne/packmatic/pull/8
