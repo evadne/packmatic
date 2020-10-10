@@ -7,13 +7,15 @@ defmodule Packmatic.Source.StreamTest do
     enum = StreamData.binary() |> Stream.take(5)
     {:ok, state} = module.init(enum)
 
-    for _ <- 1..5 do
-      data = module.read(state)
-      assert is_binary(data)
-    end
+    state =
+      for _ <- 1..5, reduce: state do
+        state ->
+          {data, state} = module.read(state)
+          assert is_binary(data)
+          state
+      end
 
     assert :eof = module.read(state)
-    refute Process.alive?(state.agent_pid)
   end
 
   describe "when in a manifest" do

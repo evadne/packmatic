@@ -16,9 +16,9 @@ defmodule Packmatic.Source.Stream do
   @type init_result :: {:ok, t}
   @spec init(init_arg) :: init_result
 
-  @type t :: %__MODULE__{agent_pid: pid()}
-  @enforce_keys ~w(agent_pid)a
-  defstruct agent_pid: nil
+  @type t :: %__MODULE__{continuation: nil | Enumerable.continuation()}
+  @enforce_keys ~w(continuation)a
+  defstruct continuation: nil
 
   @impl Source
   def validate(init_arg) do
@@ -32,31 +32,21 @@ defmodule Packmatic.Source.Stream do
   def init(enum) do
     reduce_fun = fn item, _acc -> {:suspend, item} end
     {:suspended, nil, continuation} = Enumerable.reduce(enum, {:suspend, nil}, reduce_fun)
-    {:ok, agent_pid} = Agent.start_link(fn -> continuation end)
-    {:ok, %__MODULE__{agent_pid: agent_pid}}
+    {:ok, %__MODULE__{continuation: continuation}}
   end
 
   @impl Source
-  def read(%{agent_pid: agent_pid}) do
-    with true <- Process.alive?(agent_pid) do
-      with :eof <- iterate(agent_pid) do
-        :ok = Agent.stop(agent_pid)
-        :eof
-      else
-        item -> item
-      end
-    else
-      _ -> {:error, :agent_missing}
-    end
+  def read(state)
+
+  def read(%{continuation: nil}) do
+    :eof
   end
 
-  defp iterate(agent_pid) do
-    Agent.get_and_update(agent_pid, fn continuation ->
-      case continuation.({:cont, nil}) do
-        {:suspended, item, continuation} -> {item, continuation}
-        {:halted, item} -> {item, fn _ -> {:done, nil} end}
-        {:done, nil} -> {:eof, nil}
-      end
-    end)
+  def read(%{continuation: continuation} = state) do
+    case continuation.({:cont, nil}) do
+      {:suspended, item, continuation} -> {item, %{state | continuation: continuation}}
+      {:halted, item} -> {item, %{state | continuation: nil}}
+      {:done, nil} -> :eof
+    end
   end
 end
