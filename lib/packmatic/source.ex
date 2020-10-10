@@ -30,8 +30,7 @@ defmodule Packmatic.Source do
   3.  `:dynamic` resolves to `Packmatic.Source.Dynamic`.
   4.  `:random` resolves to `Packmatic.Source.Random`.
 
-  If another atom is passed, Packmatic will first ensure that a module with that name has been
-  loaded, then use it.
+  When using Custom Sources, the module name can be passed (as an atom) as well.
 
   ### Initialisation Argument
 
@@ -144,6 +143,7 @@ defmodule Packmatic.Source do
   defp resolve(:url), do: {:module, __MODULE__.URL}
   defp resolve(:random), do: {:module, __MODULE__.Random}
   defp resolve(:dynamic), do: {:module, __MODULE__.Dynamic}
+  defp resolve(:stream), do: {:module, __MODULE__.Stream}
   defp resolve(module) when is_atom(module), do: Code.ensure_loaded(module)
   defp resolve(_), do: {:error, :invalid_name}
 end
