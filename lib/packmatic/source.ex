@@ -87,9 +87,13 @@ defmodule Packmatic.Source do
   @callback init(term()) :: {:ok, t} | {:error, term()}
 
   @doc """
-  Iterates the Source State. Returns an IO List, `:eof`, or `{:error, reason}`.
+  Iterates the Source State.
+
+  Usually this will return an IO List, or `{:error, reason}`. For stateful Sources, an updated
+  Source State can be returned with the data. Note that Sources that have returned `:eof` or
+  `{:error, reason}` will not be touched again.
   """
-  @callback read(t) :: iodata() | :eof | {:error, term()}
+  @callback read(t) :: iodata() | {iodata(), t} | :eof | {:error, term()}
 
   @typedoc """
   Represents an internal tuple that can be used to initialise a Source with `build/1`.
@@ -101,7 +105,7 @@ defmodule Packmatic.Source do
 
   @spec validate(entry) :: :ok | {:error, term()}
   @spec build(entry) :: {:ok, t} | {:error, term()}
-  @spec read(t) :: iodata() | :eof | {:error, term()}
+  @spec read(t) :: iodata() | {iodata(), t} | :eof | {:error, term()}
 
   @doc """
   Validates the given Entry.
