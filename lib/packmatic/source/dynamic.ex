@@ -42,12 +42,11 @@ defmodule Packmatic.Source.Dynamic do
   alias Packmatic.Source
 
   @type init_arg :: resolve_fun
-  @type init_result :: {:ok, Source.File.t() | Source.URL.t()} | {:error, term()}
+  @type init_result :: {:ok, Source.t()} | {:error, term()}
   @spec init(init_arg) :: init_result
 
-  @type resolve_fun :: (() -> resolve_result_file | resolve_result_url | resolve_result_error)
-  @type resolve_result_file :: {:ok, {:file, Source.File.init_arg()}}
-  @type resolve_result_url :: {:ok, {:url, Source.URL.init_arg()}}
+  @type resolve_fun :: (() -> resolve_result | resolve_result_error)
+  @type resolve_result :: {:ok, Packmatic.Source.entry()}
   @type resolve_result_error :: {:error, term()}
 
   def validate(fun) when is_function(fun, 0), do: :ok
@@ -55,8 +54,7 @@ defmodule Packmatic.Source.Dynamic do
 
   def init(resolve_fun) do
     case resolve_fun.() do
-      {:ok, {:file, path}} -> Source.File.init(path)
-      {:ok, {:url, url}} -> Source.URL.init(url)
+      {:ok, entry} -> Source.build(entry)
       {:error, reason} -> {:error, reason}
     end
   end
