@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [Unreleased][unreleased]
+
+### Added
+
+- Added `Packmatic.Source.Stream`.
+  - Added support for Streams that output IO Lists.
+
+### Changed
+
+- Revised `Packmatic.Source.Dynamic`.
+  - Removed custom resolver; any entry notation now accepted
+
 ## [1.1.0] — 3 October 2020
 
 ### Added
