@@ -41,18 +41,17 @@ defmodule Packmatic.Encoder.Encoding do
 
   def encoding_next(%EncodingState{current: nil, remaining: [entry | rest]} = state) do
     case Source.build(entry.source) do
-      {:ok, source} -> encoding_entry_start(entry, source, %{state | remaining: rest})
-      {:error, reason} -> encoding_entry_start_error(entry, reason, %{state | remaining: rest})
+      {:ok, source} -> encoding_entry_start(%{state | remaining: rest}, entry, source)
+      {:error, reason} -> encoding_entry_start_error(%{state | remaining: rest}, entry, reason)
     end
   end
 
   def encoding_next(%EncodingState{current: {_, source, _}} = state) do
     case Source.read(source) do
-      [] -> encoding_next(state)
-      <<>> -> encoding_next(state)
-      data when is_binary(data) or is_list(data) -> encoding_entry_data(data, state)
       :eof -> encoding_entry_eof(state)
-      {:error, reason} -> encoding_entry_error(reason, state)
+      {:error, reason} -> encoding_entry_error(state, reason)
+      {data, source} -> state |> encoding_next_source(source) |> encoding_next_data(data)
+      data -> state |> encoding_next_data(data)
     end
   end
 
@@ -60,7 +59,19 @@ defmodule Packmatic.Encoder.Encoding do
     state |> close_zstream() |> done()
   end
 
-  defp encoding_entry_start(entry, source, state) do
+  defp encoding_next_source(state, source) do
+    state |> Map.put(:current, put_elem(state.current, 1, source))
+  end
+
+  defp encoding_next_data(state, data) do
+    case data do
+      <<>> -> encoding_next(state)
+      [] -> encoding_next(state)
+      data when is_binary(data) or is_list(data) -> encoding_entry_data(state, data)
+    end
+  end
+
+  defp encoding_entry_start(state, entry, source) do
     data = Field.encode_local_file_header(entry)
     info = %EncodingState.EntryInfo{offset: state.bytes_emitted}
 
@@ -72,14 +83,14 @@ defmodule Packmatic.Encoder.Encoding do
     |> data(data)
   end
 
-  defp encoding_entry_start_error(entry, reason, %{on_error: :skip} = state) do
+  defp encoding_entry_start_error(%{on_error: :skip} = state, entry, reason) do
     state
     |> Map.update!(:encoded, &[{entry, {:error, reason}} | &1])
     |> Event.emit_entry_failed(entry, reason)
     |> data([])
   end
 
-  defp encoding_entry_start_error(entry, reason, %{on_error: :halt} = state) do
+  defp encoding_entry_start_error(%{on_error: :halt} = state, entry, reason) do
     state
     |> Map.update!(:encoded, &[{entry, {:error, reason}} | &1])
     |> Event.emit_entry_failed(entry, reason)
@@ -87,20 +98,20 @@ defmodule Packmatic.Encoder.Encoding do
     |> halt(reason)
   end
 
-  defp encoding_entry_data(data_uncompressed, %{current: {entry, source, info}} = state) do
+  defp encoding_entry_data(%{current: {entry, _, info}} = state, data_uncompressed) do
     data_compressed = :zlib.deflate(state.zstream, data_uncompressed, :full)
     info = %{info | checksum: crc32(info.checksum, data_uncompressed)}
     info = %{info | size_compressed: info.size_compressed + iolist_size(data_compressed)}
     info = %{info | size: info.size + iolist_size(data_uncompressed)}
 
     state
-    |> Map.put(:current, {entry, source, info})
+    |> Map.put(:current, put_elem(state.current, 2, info))
     |> Map.update!(:bytes_emitted, &(&1 + iolist_size(data_compressed)))
     |> Event.emit_entry_updated(entry, info)
     |> data(data_compressed)
   end
 
-  defp encoding_entry_eof(%{current: {entry, _source, info}} = state) do
+  defp encoding_entry_eof(%{current: {entry, _, info}} = state) do
     data_compressed = :zlib.deflate(state.zstream, <<>>, :finish)
     info = %{info | size_compressed: info.size_compressed + iolist_size(data_compressed)}
     data_descriptor = Field.encode_local_data_descriptor(info)
@@ -113,7 +124,7 @@ defmodule Packmatic.Encoder.Encoding do
     |> data([data_compressed, data_descriptor])
   end
 
-  defp encoding_entry_error(reason, %{current: {entry, _, _}, on_error: :skip} = state) do
+  defp encoding_entry_error(%{current: {entry, _, _}, on_error: :skip} = state, reason) do
     state
     |> Map.put(:current, nil)
     |> Map.update!(:encoded, &[{entry, {:error, reason}} | &1])
@@ -121,7 +132,7 @@ defmodule Packmatic.Encoder.Encoding do
     |> data([])
   end
 
-  defp encoding_entry_error(reason, %{current: {entry, _, _}, on_error: :halt} = state) do
+  defp encoding_entry_error(%{current: {entry, _, _}, on_error: :halt} = state, reason) do
     state
     |> Event.emit_entry_failed(entry, reason)
     |> Event.emit_stream_ended(reason)
