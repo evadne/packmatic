@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Added `Packmatic.Source.Stream`.
   - Added support for Streams that output IO Lists.
 
+- Updated `Packmatic.Source`.
+  - Added ability for any Source to use any data type as its Source State.
+  - Added ability for any Source to return an updated Source State with new data.
+
 ### Changed
 
 - Revised `Packmatic.Source.Dynamic`.
