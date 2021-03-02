@@ -21,7 +21,9 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 ### Changed
 
 - Revised `Packmatic.Source.Dynamic`.
-  - Removed custom resolver; any entry notation now accepted
+  - Removed custom resolver; any entry notation now accepted.
+
+- Updated development & test dependencies.
 
 ## [1.1.0] — 3 October 2020
 

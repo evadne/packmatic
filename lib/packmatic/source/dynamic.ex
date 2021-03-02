@@ -52,6 +52,7 @@ defmodule Packmatic.Source.Dynamic do
   @type resolve_result :: {:ok, Packmatic.Source.entry()}
   @type resolve_result_error :: {:error, term()}
 
+  @impl Source
   def validate(fun) when is_function(fun, 0), do: :ok
   def validate(_), do: {:error, :invalid}
 
