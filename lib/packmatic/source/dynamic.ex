@@ -45,11 +45,11 @@ defmodule Packmatic.Source.Dynamic do
   @behaviour Source
 
   @type init_arg :: resolve_fun
-  @type init_result :: {:ok, Source.t()} | {:error, term()}
+  @type init_result :: {:ok, Source.state()} | {:error, term()}
   @spec init(init_arg) :: init_result
 
   @type resolve_fun :: (() -> resolve_result | resolve_result_error)
-  @type resolve_result :: {:ok, Packmatic.Source.entry()}
+  @type resolve_result :: {:ok, Source.entry()}
   @type resolve_result_error :: {:error, term()}
 
   @impl Source

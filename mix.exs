@@ -29,7 +29,6 @@ defmodule Packmatic.MixProject do
     [
       plt_add_apps: [:mix, :iex, :ex_unit],
       flags: ~w(error_handling no_opaque race_conditions underspecs unmatched_returns)a,
-      ignore_warnings: "dialyzer-ignore-warnings.exs",
       list_unused_filters: true
     ]
   end
