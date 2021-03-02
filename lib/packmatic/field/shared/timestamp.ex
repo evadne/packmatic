@@ -15,7 +15,7 @@ defmodule Packmatic.Field.Shared.Timestamp do
 
   ### Notes
 
-  See Erlang/OTP: `:zip.dos_date_time_to_datetime/2`.
+  See Erlang/OTP’s zip module: `dos_date_time_to_datetime/2`.
 
   If the Timestamp given is prior to midnight, 1 January, 1980, it is also coerced to midnight, 1
   January, 1980.
