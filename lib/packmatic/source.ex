@@ -30,8 +30,7 @@ defmodule Packmatic.Source do
   3.  `:dynamic` resolves to `Packmatic.Source.Dynamic`.
   4.  `:random` resolves to `Packmatic.Source.Random`.
 
-  If another atom is passed, Packmatic will first ensure that a module with that name has been
-  loaded, then use it.
+  When using Custom Sources, the module name can be passed (as an atom) as well.
 
   ### Initialisation Argument
 
@@ -43,7 +42,9 @@ defmodule Packmatic.Source do
   The Source Entry `{:file, path}` is resolved during encoding:
 
       iex(1)> {:ok, file_path} = Briefly.create()
-      iex(2)> {:ok, state} = Packmatic.Source.build({:file, file_path})
+      iex(2)> {:ok, {module, state}} = Packmatic.Source.build({:file, file_path})
+      iex(3)> module
+      Packmatic.Source.File
       iex(3)> state.__struct__
       Packmatic.Source.File
 
@@ -69,13 +70,10 @@ defmodule Packmatic.Source do
   @typedoc """
   Represents the internal State for a resolved Source that is being read from.
 
-  Sources that hold state must use `defstruct` to define a struct, as the name of the struct is
-  used to refer them back to the Source module when reading data.
-
-  In case of a File source, the struct may hold the File Handle; in case of a URL source, it may
-  indirectly refer to the underlying network socket, etc.
+  In case of a File source, the state may be a struct which holds the File Handle; in case of a
+  URL source, it may be the underlying network socket, etc.
   """
-  @type t :: struct()
+  @type state :: term()
 
   @doc """
   Validates the given Initialisation Argument.
@@ -85,12 +83,16 @@ defmodule Packmatic.Source do
   @doc """
   Converts the Entry to a Source State.
   """
-  @callback init(term()) :: {:ok, t} | {:error, term()}
+  @callback init(term()) :: {:ok, state} | {:error, term()}
 
   @doc """
-  Iterates the Source State. Returns an IO List, `:eof`, or `{:error, reason}`.
+  Iterates the Source State.
+
+  Usually this will return an IO List, or `{:error, reason}`. For stateful Sources, an updated
+  Source State can be returned with the data. Note that Sources that have returned `:eof` or
+  `{:error, reason}` will not be touched again.
   """
-  @callback read(t) :: iodata() | :eof | {:error, term()}
+  @callback read(state) :: iodata() | {iodata(), state} | :eof | {:error, term()}
 
   @typedoc """
   Represents an internal tuple that can be used to initialise a Source with `build/1`.
@@ -100,9 +102,12 @@ defmodule Packmatic.Source do
   """
   @type entry :: {name, init_arg}
 
+  @typedoc false
+  @opaque t :: {module(), state}
+
   @spec validate(entry) :: :ok | {:error, term()}
   @spec build(entry) :: {:ok, t} | {:error, term()}
-  @spec read(t) :: iodata() | :eof | {:error, term()}
+  @spec read(t) :: iodata() | {iodata(), t} | :eof | {:error, term()}
 
   @doc """
   Validates the given Entry.
@@ -126,8 +131,9 @@ defmodule Packmatic.Source do
   def build(entry)
 
   def build({name, init_arg}) do
-    with {:module, module} <- resolve(name) do
-      module.init(init_arg)
+    with {:module, module} <- resolve(name),
+         {:ok, state} <- module.init(init_arg) do
+      {:ok, {module, state}}
     end
   end
 
@@ -137,13 +143,19 @@ defmodule Packmatic.Source do
   Called by `Packmatic.Encoder`.
   """
   def read(state)
-  def read(%{__struct__: module} = state), do: module.read(state)
-  def read(_), do: {:error, :invalid_state}
+
+  def read({module, state}) do
+    case module.read(state) do
+      {data, state} when is_binary(data) or is_list(data) -> {data, {module, state}}
+      result -> result
+    end
+  end
 
   defp resolve(:file), do: {:module, __MODULE__.File}
   defp resolve(:url), do: {:module, __MODULE__.URL}
   defp resolve(:random), do: {:module, __MODULE__.Random}
   defp resolve(:dynamic), do: {:module, __MODULE__.Dynamic}
+  defp resolve(:stream), do: {:module, __MODULE__.Stream}
   defp resolve(module) when is_atom(module), do: Code.ensure_loaded(module)
   defp resolve(_), do: {:error, :invalid_name}
 end

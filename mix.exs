@@ -44,7 +44,8 @@ defmodule Packmatic.MixProject do
       {:ibrowse, "~> 4.4.0"},
       {:mox, "~> 0.5.1", only: :test},
       {:teamcity_formatter, github: "prook/teamcity_formatter", only: [:test], runtime: false},
-      {:timex, "~> 3.6.1", only: :test}
+      {:timex, "~> 3.6.1", only: :test},
+      {:stream_data, "~> 0.5.0", only: :test}
     ]
   end
 
