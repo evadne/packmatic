@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [1.1.1] — 2 March 2021
+
+### Added
+
+- Added `Packmatic.Source.Stream`.
+  - Added support for Streams that output IO Lists.
+
+- Updated `Packmatic.Source`.
+  - Added ability for any Source to use any data type as its Source State.
+  - Added ability for any Source to return an updated Source State with new data.
+
+### Changed
+
+- Revised `Packmatic.Source.Dynamic`.
+  - Removed custom resolver; any entry notation now accepted.
+
+- Updated development & test dependencies.
+
 ## [1.1.0] — 3 October 2020
 
 ### Added
@@ -75,6 +93,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Initial Release.
 
 [unreleased]: https://github.com/evadne/packmatic/compare/master...develop
+[1.1.1]: https://github.com/evadne/packmatic/releases/tag/v1.1.1
 [1.1.0]: https://github.com/evadne/packmatic/releases/tag/v1.1.0
 [1.0.0]: https://github.com/evadne/packmatic/releases/tag/v1.0.0
 [0.1.0]: https://github.com/evadne/packmatic/releases/tag/v0.1.0

@@ -1,15 +1,17 @@
 defmodule Packmatic.Source.Dynamic do
   @moduledoc """
   Represents content which may be generated on-demand, for example by another subsystem or via
-  downloading from a signed URL. The Dynamic source has no read function, and must initialise into
-  a File or URL Source.
+  downloading from a signed URL.
 
   For example, a function which dynamically generates a URL (perhaps a signed S3 URL in your own
   use case) would look like this:
 
       iex(1)> url = "https://example.com"
-      iex(2)> {:ok, source} = Packmatic.Source.Dynamic.init(fn -> {:ok, {:url, url}} end)
-      iex(3)> source.__struct__
+      iex(2)> init_arg = fn -> {:ok, {:url, url}} end
+      iex(3)> {:ok, {module, source}} = Packmatic.Source.Dynamic.init(init_arg)
+      iex(4)> module
+      Packmatic.Source.URL
+      iex(5)> source.__struct__
       Packmatic.Source.URL
 
   And when used within a Manifest, it would look like this:
@@ -40,24 +42,33 @@ defmodule Packmatic.Source.Dynamic do
   """
 
   alias Packmatic.Source
+  @behaviour Source
 
   @type init_arg :: resolve_fun
-  @type init_result :: {:ok, Source.File.t() | Source.URL.t()} | {:error, term()}
+  @type init_result :: {:ok, Source.t()} | {:error, term()}
   @spec init(init_arg) :: init_result
 
-  @type resolve_fun :: (() -> resolve_result_file | resolve_result_url | resolve_result_error)
-  @type resolve_result_file :: {:ok, {:file, Source.File.init_arg()}}
-  @type resolve_result_url :: {:ok, {:url, Source.URL.init_arg()}}
+  @type resolve_fun :: (() -> resolve_result | resolve_result_error)
+  @type resolve_result :: {:ok, Packmatic.Source.entry()}
   @type resolve_result_error :: {:error, term()}
 
+  @impl Source
   def validate(fun) when is_function(fun, 0), do: :ok
   def validate(_), do: {:error, :invalid}
 
+  @impl Source
   def init(resolve_fun) do
     case resolve_fun.() do
-      {:ok, {:file, path}} -> Source.File.init(path)
-      {:ok, {:url, url}} -> Source.URL.init(url)
+      {:ok, entry} -> Source.build(entry)
       {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @impl Source
+  def read({module, state}) do
+    case module.read(state) do
+      {data, state} when is_binary(data) or is_list(data) -> {data, {module, state}}
+      result -> result
     end
   end
 end
