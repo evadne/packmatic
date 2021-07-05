@@ -41,12 +41,12 @@ defmodule Packmatic.MixProject do
       {:briefly, "~> 0.3.0", only: :test},
       {:bypass, "~> 2.1.0", only: :test},
       {:dialyxir, "~> 1.1.0", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.24.2", only: :dev, runtime: false},
       {:httpotion, "~> 3.1.3"},
       {:ibrowse, "4.4.0"},
       {:mox, "~> 1.0.0", only: :test},
-      {:teamcity_formatter, github: "prook/teamcity_formatter", only: [:test], runtime: false},
-      {:timex, "~> 3.6.4", only: :test},
+      {:teamcity_formatter, github: "prook/teamcity_formatter", only: :test, runtime: false},
+      {:timex, "~> 3.7.5", only: :test},
       {:stream_data, "~> 0.5.0", only: :test}
     ]
   end
