@@ -4,7 +4,7 @@ defmodule Packmatic.MixProject do
   def project do
     [
       app: :packmatic,
-      version: "1.1.1",
+      version: "1.1.2",
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
