@@ -16,7 +16,7 @@ defmodule PackmaticTest.Builder do
     {:file, file_path}
   end
 
-  def build_url_source(size_mb \\ 8) do
+  def build_url_source(size_mb) do
     bypass = Bypass.open()
     on_exit(fn -> Bypass.pass(bypass) end)
 
@@ -24,6 +24,26 @@ defmodule PackmaticTest.Builder do
       build_byte_stream()
       |> Stream.take(size_mb)
       |> Packmatic.Conn.send_chunked(conn, "download.zip")
+    end
+
+    Bypass.stub(bypass, "GET", "/content.bin", content_fun)
+    {:url, "http://localhost:#{bypass.port}/content.bin"}
+  end
+
+  def build_url_source(size_mb, :notify) do
+    bypass = Bypass.open()
+    owner = self()
+    on_exit(fn -> Bypass.pass(bypass) end)
+
+    event_fun = fn bytes_emitted ->
+      send(owner, {:chunked, bytes_emitted})
+      :ok
+    end
+
+    content_fun = fn conn ->
+      build_byte_stream()
+      |> Stream.take(size_mb)
+      |> Packmatic.Conn.send_chunked(conn, "download.zip", event_fun)
     end
 
     Bypass.stub(bypass, "GET", "/content.bin", content_fun)
