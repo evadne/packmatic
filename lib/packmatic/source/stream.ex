@@ -47,6 +47,7 @@ defmodule Packmatic.Source.Stream do
       {:suspended, {:item, item}, continuation} -> {item, %{state | continuation: continuation}}
       {:halted, {:item, item}} -> {item, %{state | continuation: nil}}
       {:halted, :eof} -> :eof
+      {:done, :eof} -> :eof
       {:done, nil} -> :eof
     end
   end

@@ -17,6 +17,22 @@ defmodule Packmatic.Source.StreamTest do
 
     assert :eof = module.read(state)
   end
+  
+  test "can work on IO Lists" do
+    module = Packmatic.Source.Stream
+    enum = StreamData.iolist() |> Stream.take(5)
+    {:ok, state} = module.init(enum)
+    
+    state =
+      for _ <- 1..5, reduce: state do
+        state ->
+          {data, state} = module.read(state)
+          assert is_binary(IO.iodata_to_binary(data))
+          state
+      end
+
+    assert :eof = module.read(state)
+  end
 
   test "can work independently on StringIO-backed stream" do
     module = Packmatic.Source.Stream
@@ -58,6 +74,17 @@ defmodule Packmatic.Source.StreamTest do
       |> Packmatic.build_stream()
       |> Stream.into(File.stream!(context.file_path, [:write]))
       |> Stream.run()
+    end
+    
+    test "can work with IO Lists", context do
+      [{{:stream, [[<<?A>>, <<?B>>], <<?C>>, [<<?D>>]]}, "foo.bin"}]
+      |> PackmaticTest.Builder.build_manifest()
+      |> Packmatic.build_stream()
+      |> Stream.into(File.stream!(context.file_path, [:write]))
+      |> Stream.run()
+
+      assert {_, 0} = System.cmd("zipinfo", [context.file_path])
+      assert {"ABCD", 0} = System.cmd("unzip", ["-p", context.file_path])
     end
 
     test "can work with StringIO-backed stream" do
