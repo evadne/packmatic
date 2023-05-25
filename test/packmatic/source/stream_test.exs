@@ -2,13 +2,32 @@ defmodule Packmatic.Source.StreamTest do
   use ExUnit.Case, async: true
   doctest Packmatic.Source.Stream
 
-  test "can work independently" do
+  test "can work independently on binaries" do
     module = Packmatic.Source.Stream
     enum = StreamData.binary() |> Stream.take(5)
     {:ok, state} = module.init(enum)
 
     state =
       for _ <- 1..5, reduce: state do
+        state ->
+          {data, state} = module.read(state)
+          assert is_binary(data)
+          state
+      end
+
+    assert :eof = module.read(state)
+  end
+
+  test "can work independently on StringIO-backed stream" do
+    module = Packmatic.Source.Stream
+
+    {:ok, device} = StringIO.open("a string\nfoo")
+    enum = IO.binstream(device, :line)
+
+    {:ok, state} = module.init(enum)
+
+    state =
+      for _ <- 1..2, reduce: state do
         state ->
           {data, state} = module.read(state)
           assert is_binary(data)
@@ -38,6 +57,16 @@ defmodule Packmatic.Source.StreamTest do
       |> PackmaticTest.Builder.build_manifest()
       |> Packmatic.build_stream()
       |> Stream.into(File.stream!(context.file_path, [:write]))
+      |> Stream.run()
+    end
+
+    test "can work with StringIO-backed stream" do
+      {:ok, device} = StringIO.open("a string\nfoo")
+      stream = IO.binstream(device, :line)
+
+      [{{:stream, stream}, "foo.bin"}]
+      |> PackmaticTest.Builder.build_manifest()
+      |> Packmatic.build_stream()
       |> Stream.run()
     end
   end

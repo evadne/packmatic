@@ -189,7 +189,7 @@ handler_fun = fn event ->
     %Packmatic.Event.EntryCompleted{} ->
       count = Agent.get_and_update(entries_completed_agent, & &1 + 1)
       IO.puts "#{count} of #{entries_count} encoded"
-    %Packmatic.Event.EntryCompleted{} ->
+    %Packmatic.Event.StreamEnded{} ->
       :ok = Agent.stop(entries_completed_agent)
       :ok
     _ ->
