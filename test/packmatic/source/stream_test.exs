@@ -17,12 +17,12 @@ defmodule Packmatic.Source.StreamTest do
 
     assert :eof = module.read(state)
   end
-  
+
   test "can work on IO Lists" do
     module = Packmatic.Source.Stream
     enum = StreamData.iolist() |> Stream.take(5)
     {:ok, state} = module.init(enum)
-    
+
     state =
       for _ <- 1..5, reduce: state do
         state ->
@@ -75,7 +75,22 @@ defmodule Packmatic.Source.StreamTest do
       |> Stream.into(File.stream!(context.file_path, [:write]))
       |> Stream.run()
     end
-    
+
+    test "can work with term roundtrip", context do
+      term = [%{"lat" => 1.1, "long" => 2.2}]
+      enum = [:erlang.term_to_binary(term)]
+
+      [{{:stream, enum}, "foo.bin"}]
+      |> PackmaticTest.Builder.build_manifest()
+      |> Packmatic.build_stream()
+      |> Stream.into(File.stream!(context.file_path, [:write]))
+      |> Stream.run()
+
+      assert {_, 0} = System.cmd("zipinfo", [context.file_path])
+      assert {binary, 0} = System.cmd("unzip", ["-p", context.file_path])
+      assert ^term = :erlang.binary_to_term(binary)
+    end
+
     test "can work with IO Lists", context do
       [{{:stream, [[<<?A>>, <<?B>>], <<?C>>, [<<?D>>]]}, "foo.bin"}]
       |> PackmaticTest.Builder.build_manifest()
