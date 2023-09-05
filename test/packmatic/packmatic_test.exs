@@ -110,8 +110,8 @@ defmodule PackmaticTest do
 
     test "can download from existing URLs", context do
       urls = [
-        "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3",
-        "https://file-examples.com/wp-content/uploads/2017/11/file_example_OOG_1MG.ogg"
+        "https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg",
+        "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg"
       ]
 
       Enum.map(urls, &{{:url, &1}, Path.basename(URI.parse(&1).path)})

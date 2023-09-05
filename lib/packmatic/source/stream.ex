@@ -30,7 +30,7 @@ defmodule Packmatic.Source.Stream do
 
   @impl Source
   def init(enum) do
-    reduce_fun = fn item, _acc -> {:suspend, item} end
+    reduce_fun = fn item, _acc -> {:suspend, {:item, item}} end
     {:suspended, nil, continuation} = Enumerable.reduce(enum, {:suspend, nil}, reduce_fun)
     {:ok, %__MODULE__{continuation: continuation}}
   end
@@ -43,9 +43,11 @@ defmodule Packmatic.Source.Stream do
   end
 
   def read(%{continuation: continuation} = state) do
-    case continuation.({:cont, nil}) do
-      {:suspended, item, continuation} -> {item, %{state | continuation: continuation}}
-      {:halted, item} -> {item, %{state | continuation: nil}}
+    case continuation.({:cont, :eof}) do
+      {:suspended, {:item, item}, continuation} -> {item, %{state | continuation: continuation}}
+      {:halted, {:item, item}} -> {item, %{state | continuation: nil}}
+      {:halted, :eof} -> :eof
+      {:done, :eof} -> :eof
       {:done, nil} -> :eof
     end
   end
