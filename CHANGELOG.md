@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [1.1.4] — 12 December 2023
+
+### Changed
+
+- Revised handling of URL sources.
+
+- Updated handling of SSL connections based on OTP 25 changes.
+
+- Added SSL verify_peer by default.
+
+- Added CA Certificates handling.
+
+- Updated ibrowse to 4.4.2.
+
+- Updated httpotion to 3.2.0.g
+
 ## [1.1.3] — 5 September 2023
 
 ### Changed
