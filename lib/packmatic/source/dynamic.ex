@@ -48,7 +48,7 @@ defmodule Packmatic.Source.Dynamic do
   @type init_result :: {:ok, Source.state()} | {:error, term()}
   @spec init(init_arg) :: init_result
 
-  @type resolve_fun :: (() -> resolve_result | resolve_result_error)
+  @type resolve_fun :: (-> resolve_result | resolve_result_error)
   @type resolve_result :: {:ok, Source.entry()}
   @type resolve_result_error :: {:error, term()}
 
