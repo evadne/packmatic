@@ -4,8 +4,8 @@ defmodule Packmatic.MixProject do
   def project do
     [
       app: :packmatic,
-      version: "1.1.3",
-      elixir: "~> 1.9",
+      version: "1.1.4",
+      elixir: "~> 1.15.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       package: package(),
@@ -42,7 +42,7 @@ defmodule Packmatic.MixProject do
 
   defp deps(:test) do
     [
-      {:briefly, "~> 0.3.0", only: :test},
+      {:briefly, "~> 0.5.0", only: :test},
       {:bypass, "~> 2.1.0", only: :test},
       {:mox, "~> 1.0.0", only: :test},
       {:teamcity_formatter, github: "prook/teamcity_formatter", only: :test, runtime: false},
@@ -52,12 +52,12 @@ defmodule Packmatic.MixProject do
   end
 
   defp deps(:prod) do
-    # iBrowse 4.4.1 is buggy
-    # https://github.com/cmullaparthi/ibrowse/issues/162
-
     [
-      {:httpotion, "~> 3.1.3"},
-      {:ibrowse, "4.4.0"},
+      # {:httpotion, "~> 3.1.3"},
+      # {:ibrowse, "4.4.0"},
+      {:ssl_verify_fun, "~> 1.1.7"},
+      {:httpotion, "~> 3.2.0"},
+      {:ibrowse, "~> 4.4.2", override: true},
       {:plug, "~> 1.14", optional: true}
     ]
   end

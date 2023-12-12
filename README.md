@@ -54,7 +54,7 @@ To install Packmatic, add the following line in your application’s dependencie
 ```elixir
 defp deps do
   [
-    {:packmatic, "~> 1.1.3"}
+    {:packmatic, "~> 1.1.4"}
   ]
 end
 ```
@@ -202,6 +202,33 @@ stream = Packmatic.build_stream(entries, on_event: handler_fun)
 
 See documentation for `Packmatic.Event` for a complete list of Event types.
 
+### Compatibility
+
+- Windows
+  - Windows Explorer (Windows 10): OK
+  - 7-Zip: OK
+
+- macOS
+  - Finder (High Sierra): OK
+  - The Unarchiver (High Sierra): NG
+  - Erlang/OTP (`:zip`): NG
+
+### Known Issues
+
+- Ability to switch between STORE and DEFLATE modes is under investigation. Currently all archives are generated with DEFLATE, although for some use cases, this only increases the size of the archive, as content within each file is already compressed.
+
+- Can not change compression level.
+
+- Explicit directory generation is not supported; each entry must be a file. This is pending further investigation.
+
+- Handling of 0-length files from sources is pending further investigation. Currently, they do get journaled but this may change in the future.
+
+### Future Enhancements
+
+- We will consider adding ability to resume downloads with range queries, so if the URL Source fails we can attempt to resume encoding from where we left off.
+
+- In practice, if there are large files that are archived repeatedly, they will be pulled repeatedly and there is currently no explicit ability to cache them. We expect that in these cases an optimisation by the application developer may be to temporarily spool these hot constituents on disk and use a Dynamic Source to wrap around the cache layer (which would emit a File Source if the file is available locally, and act accordingly otherwise).
+
 ## Notes
 
 1.  As with any user-generated content, you should exercise caution when building the Manifest, and ensure that only content that the User is entitled to retrieve is included.
@@ -236,32 +263,50 @@ See documentation for `Packmatic.Event` for a complete list of Event types.
 
 4.  You must ensure that paths conform to the target environment of your choice, for example macOS and Windows each has its limitations regarding how long paths can be.
 
-### Compatibility
+5.  The Stream emitted by Packmatic contains [IO Data](https://hexdocs.pm/elixir/1.12/IO.html#module-io-data) basically lists of binaries or themselves. To use the Stream with other libraries such as ex_aws_s3, you will have to write a transformer which converts the IO Lists to binaries. See the guest post.
 
-- Windows
-  - Windows Explorer (Windows 10): OK
-  - 7-Zip: OK
+### Guest Post: Using Packmatic with AWS S3 Multipart Uploads
 
-- macOS
-  - Finder (High Sierra): OK
-  - The Unarchiver (High Sierra): NG
-  - Erlang/OTP (`:zip`): NG
+*The following Guest Post is authored by Kyle Steger at Driver Technologies.*
 
-### Known Issues
+Our company develops a dashcam application. We sync loads of sensor data (locations, acceleration, orientation, attitudes, ect) to our cloud platform while folks are driving with the application. This data is voluminous and infrequently queried so the natural place to store it is in S3. We allow our users to download exports of their data through our portal. We also share anonymized and aggregated information with some of our partners, who are typically interested in smaller segments of data around specific scenarios identified throughout a drive (think: hard braking, near collision, emergency vehicles). Today, that process could be summarized in a few steps:
 
-- Ability to switch between STORE and DEFLATE modes is under investigation. Currently all archives are generated with DEFLATE, although for some use cases, this only increases the size of the archive, as content within each file is already compressed.
+1. Fetch sensor data from S3
+2. Filter/transform the data in memory
+3. Write the result to an export directory on disk
+4. Create an archive of the directory using `:erlang.zip` and write to disk
+5. Pray everything worked as it should
+6. Stream the archive to S3
+7. Remove all artifacts from disk
 
-- Can not change compression level.
+Packmatic allows us to remove steps 3, 4, 5, and 7 from our export flow. Since Packmatic works with streams, we create sources that are responsible for filtering the data and emitting the buffer that Packmatic passes off to the `ExAws.S3.upload` function. The only thing that I had to implement to support this was an intermediate `Stream.transform` on the `Packmatic.build_stream()`.
 
-- Explicit directory generation is not supported; each entry must be a file. This is pending further investigation.
+Example below:
 
-- Handling of 0-length files from sources is pending further investigation. Currently, they do get journaled but this may change in the future.
-
-### Future Enhancements
-
-- We will consider adding ability to resume downloads with range queries, so if the URL Source fails we can attempt to resume encoding from where we left off.
-
-- In practice, if there are large files that are archived repeatedly, they will be pulled repeatedly and there is currently no explicit ability to cache them. We expect that in these cases an optimisation by the application developer may be to temporarily spool these hot constituents on disk and use a Dynamic Source to wrap around the cache layer (which would emit a File Source if the file is available locally, and act accordingly otherwise).
+```elixir
+# 10mb; S3 has a limit of 1000 upload chunks. 
+# Ideally this value is estimated based on the export.
+@chunk_size 10_485_760
+# This function takes a stream generated by `Packmatic.build_stream()` and chunks the emitted values
+# into sizes/shapes that `ExAws.S3.upload` can handle.
+@spec chunk_packmatic_stream(Enumerable.t()) :: Enumerable.t()
+defp chunk_packmatic_stream(stream) do
+  Stream.transform(
+    stream,
+    _start_fun = fn -> {_buffer = "", _size = 0} end,
+    _reducer = fn
+      elem, {buffer, size} when size >= @chunk_size ->
+        new_buffer = IO.iodata_to_binary(elem)
+        {[buffer], {new_buffer, byte_size(new_buffer)}}
+      elem, {buffer, size} ->
+        buffer_appendage = IO.iodata_to_binary(elem)
+        {[], {buffer <> buffer_appendage, size + byte_size(buffer_appendage)}}
+    end,
+    _last_fun = fn {buffer, _size} -> {[buffer], {"", 0}} end,
+    _after_fun = fn _acc -> :ok end
+  )
+end
+```
 
 ## Acknowledgements
 
@@ -274,6 +319,7 @@ The Author wishes to thank the following individuals:
 
 - [Alvise Susmel][alvises] for proposing and testing [Encoder Events][gh-3]
 - [Christoph Geschwind][1st8] for highlighting [the need for explicit cleanup logic][gh-8]
+- Derek Kraan & Kyle Steger for Stream debugging
 
 ## Reference
 
