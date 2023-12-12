@@ -40,7 +40,7 @@ defmodule Packmatic.Encoder do
   Represents possible options to use with the Encoder.
 
   - `on_error` can be set to either `:skip` or `:halt`, which controls how the Encoder behaves
-    when there is an erorr with one of the Sources.
+    when there is an error with one of the Sources.
     
   - `on_event` can be set to a function which will be called when events are raised by the Encoder
     during its lifecycle. See `Packmatic.Event` for further information.
