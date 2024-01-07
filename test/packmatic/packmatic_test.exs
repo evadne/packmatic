@@ -104,7 +104,7 @@ defmodule PackmaticTest do
       end)
 
       url = "http://localhost:#{bypass.port}"
-      %{status_code: 200, body: body} = HTTPotion.get(url)
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
       assert ["a", "b/c", "b/d"] == get_sorted_zip_files(body)
     end
 

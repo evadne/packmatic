@@ -2,12 +2,18 @@ defmodule Packmatic.Source.URL do
   @moduledoc """
   Represents content which can be acquired by downloading from a remote server via HTTP(S) in
   chunks. Each chunk is then pulled away by the Encoder, which is iterated by the Stream.
+
+  The underlying implementation is achieved via HTTPoison and Hackney.
   """
 
   alias Packmatic.Source
   @behaviour Source
 
-  @type init_arg :: String.t()
+  @type target :: String.t() | URI.t()
+  @type headers :: keyword()
+  @type options :: keyword()
+
+  @type init_arg :: target | {target, options} | {target, headers, options}
   @type init_result :: {:ok, t}
   @spec init(init_arg) :: init_result
 
@@ -15,76 +21,89 @@ defmodule Packmatic.Source.URL do
   @enforce_keys ~w(url stream_id)a
   defstruct url: nil, stream_id: nil
 
+  @otp_app Mix.Project.config()[:app]
+
+  alias HTTPoison.{
+    AsyncChunk,
+    AsyncEnd,
+    AsyncHeaders,
+    AsyncRedirect,
+    AsyncResponse,
+    AsyncStatus,
+    Error
+  }
+
   @impl Source
-  def validate(url) when is_binary(url) and url != "", do: :ok
+  def validate({target, _headers, _options}), do: validate(target)
+  def validate(%URI{scheme: "http"}), do: :ok
+  def validate(%URI{scheme: "https"}), do: :ok
+  def validate(url) when is_binary(url), do: validate(URI.parse(url))
   def validate(_), do: {:error, :invalid}
 
   @impl Source
-  def init(url) do
-    with %{host: host} <- URI.parse(url),
-         options = httpotion_options(host),
-         %HTTPotion.AsyncResponse{id: stream_id} <- HTTPotion.get(url, options) do
+  def init({target, headers, options}), do: init(target, headers, options)
+  def init({target, options}), do: init(target, [], options)
+  def init(target), do: init(target, [], [])
+
+  def init(target, headers, options) do
+    with url = to_string(target),
+         options = build_options(options),
+         {:ok, %AsyncResponse{id: stream_id}} <- HTTPoison.get(url, headers, options) do
       {:ok, %__MODULE__{url: url, stream_id: stream_id}}
     else
+      {:error, %Error{reason: reason}} -> {:error, reason}
       {:error, reason} -> {:error, reason}
-      %HTTPotion.ErrorResponse{message: message} -> {:error, message}
     end
   end
 
   @impl Source
   def read(%__MODULE__{stream_id: stream_id}) do
-    with data when is_binary(data) <- read_receive_next(stream_id) do
-      data
-    else
-      value ->
-        _ = :ibrowse.stream_close(stream_id)
-        value
+    case read_receive_next(stream_id) do
+      data when is_binary(data) ->
+        data
+
+      :eof ->
+        _ = :hackney.stop_async(stream_id)
+        :eof
+
+      {:error, reason} ->
+        _ = :hackney.stop_async(stream_id)
+        {:error, reason}
     end
   end
 
   defp read_receive_next(stream_id) do
-    with :ok <- :ibrowse.stream_next(stream_id) do
+    with {:ok, _} <- HTTPoison.stream_next(%AsyncResponse{id: stream_id}) do
       receive do
-        %HTTPotion.AsyncHeaders{status_code: 200} -> <<>>
-        %HTTPotion.AsyncHeaders{status_code: status} -> {:error, {:unsupported_status, status}}
-        %HTTPotion.AsyncChunk{chunk: chunk, id: ^stream_id} -> chunk
-        %HTTPotion.AsyncEnd{id: ^stream_id} -> :eof
-        %HTTPotion.AsyncTimeout{id: ^stream_id} -> {:error, :timeout}
+        %AsyncStatus{code: 200} -> <<>>
+        %AsyncStatus{code: status} -> {:error, {:unsupported_status, status}}
+        %AsyncChunk{id: ^stream_id, chunk: chunk} -> chunk
+        %AsyncHeaders{id: ^stream_id} -> <<>>
+        %AsyncEnd{id: ^stream_id} -> :eof
+        %AsyncRedirect{id: ^stream_id} -> <<>>
       end
+    else
+      {:error, reason} -> {:error, reason}
     end
   end
 
-  @otp_app Mix.Project.config()[:app]
-  @default_whole_file_timeout 1000 * 60 * 30
-  @default_max_sessions 100
-
-  defp httpotion_options(host) do
-    [
-      timeout: get_whole_file_timeout(),
-      follow_redirects: true,
-      stream_to: {self(), :once},
-      ibrowse: [
-        max_sessions: get_max_sessions(),
-        ssl_options: [
-          cacerts: :public_key.cacerts_get(),
-          customize_hostname_check: [
-            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-          ],
-          server_name_indication: to_charlist(host),
-          verify: :verify_peer,
-          versions: [:"tlsv1.3", :"tlsv1.2"]
-        ]
+  def build_options(inline_options) do
+    default_options = [
+      timeout: 1000 * 5,
+      recv_timeout: 1000 * 60 * 30,
+      stream_to: self(),
+      async: :once,
+      follow_redirect: true,
+      max_redirect: 5,
+      max_body_length: 1_048_576,
+      hackney: [
+        pool: false
       ]
     ]
-  end
 
-  defp get_whole_file_timeout do
-    Application.get_env(@otp_app, __MODULE__, [])
-    |> Keyword.get(:whole_file_timeout, @default_whole_file_timeout)
-  end
-
-  defp get_max_sessions do
-    Application.get_env(@otp_app, __MODULE__, [])
-    |> Keyword.get(:max_sessions, @default_max_sessions)
+    [x: default_options]
+    |> Config.Reader.merge(x: Application.get_env(@otp_app, __MODULE__, []))
+    |> Config.Reader.merge(x: inline_options)
+    |> Keyword.get(:x)
   end
 end

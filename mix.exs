@@ -4,7 +4,7 @@ defmodule Packmatic.MixProject do
   def project do
     [
       app: :packmatic,
-      version: "1.1.4",
+      version: "1.2.0",
       elixir: "~> 1.15.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -53,12 +53,7 @@ defmodule Packmatic.MixProject do
 
   defp deps(:prod) do
     [
-      # {:httpotion, "~> 3.1.3"},
-      # {:ibrowse, "4.4.0"},
-      {:ssl_verify_fun, "~> 1.1.7"},
-      {:httpotion, "~> 3.2.0"},
-      {:ibrowse, "~> 4.4.2", override: true},
-      {:plug, "~> 1.14", optional: true}
+      {:httpoison, "~> 2.2.1"}
     ]
   end
 
