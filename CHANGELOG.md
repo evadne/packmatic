@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [1.2.0] — 7 January 2024
+
+### Changed
+
+- Changed ibrowse to hackney
+
 ## [1.1.4] — 12 December 2023
 
 ### Changed
