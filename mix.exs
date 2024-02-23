@@ -5,7 +5,7 @@ defmodule Packmatic.MixProject do
     [
       app: :packmatic,
       version: "1.2.0",
-      elixir: "~> 1.15.7",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       package: package(),
