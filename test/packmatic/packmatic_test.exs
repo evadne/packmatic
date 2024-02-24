@@ -159,6 +159,17 @@ defmodule PackmaticTest do
     end
   end
 
+  @tag timeout: :infinity
+  test "with many small files", context do
+    List.duplicate({{:random, (20) * 1_048_576}, "a"}, 400)
+    |> build_manifest()
+    |> Packmatic.build_stream()
+    |> Stream.into(File.stream!(context.file_path, [:write]))
+    |> Stream.run()
+
+    assert {_, 0} = System.cmd("zipinfo", [context.file_path])
+  end
+
   @tag external: true
   test "with large file", context do
     [{{:random, (4096 + 1) * 1_048_576}, "a"}]

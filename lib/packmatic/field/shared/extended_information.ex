@@ -24,23 +24,32 @@ defmodule Packmatic.Field.Shared.ExtendedInformation do
   8 bytes  | Compressed Size (Bytes)
   """
 
-  @type t :: %__MODULE__{size: non_neg_integer(), size_compressed: non_neg_integer()}
-  @enforce_keys ~w(size size_compressed)a
-  defstruct size: 0, size_compressed: 0
+  @type t :: %__MODULE__{offset: non_neg_integer(), size: non_neg_integer(), size_compressed: non_neg_integer()}
+  @enforce_keys ~w(offset size size_compressed)a
+  defstruct offset: 0, size: 0, size_compressed: 0
 end
 
 defimpl Packmatic.Field, for: Packmatic.Field.Shared.ExtendedInformation do
   import Packmatic.Field.Helpers
 
   def encode(target) do
+    offset = target.offset
     size = target.size
     size_compressed = target.size_compressed
 
-    [
-      <<0x01, 0x00>>,
-      encode_16(16),
-      encode_64(size),
-      encode_64(size_compressed)
-    ]
+    case offset do 
+      x when x >= 4_294_967_295 -> 
+        [
+          <<0x01, 0x00>>,
+          encode_16(16)
+        ]
+      _ -> 
+        [
+          <<0x01, 0x00>>,
+          encode_16(16),
+          encode_64(size),
+          encode_64(size_compressed)
+        ]
+    end
   end
 end
