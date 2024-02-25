@@ -24,23 +24,35 @@ defmodule Packmatic.Field.Shared.ExtendedInformation do
   8 bytes  | Compressed Size (Bytes)
   """
 
-  @type t :: %__MODULE__{size: non_neg_integer(), size_compressed: non_neg_integer()}
-  @enforce_keys ~w(size size_compressed)a
-  defstruct size: 0, size_compressed: 0
+  @type t :: %__MODULE__{offset: non_neg_integer(), size: non_neg_integer(), size_compressed: non_neg_integer()}
+  @enforce_keys ~w(offset size size_compressed)a
+  defstruct offset: 0, size: 0, size_compressed: 0
 end
 
 defimpl Packmatic.Field, for: Packmatic.Field.Shared.ExtendedInformation do
   import Packmatic.Field.Helpers
 
   def encode(target) do
+    offset = target.offset
     size = target.size
     size_compressed = target.size_compressed
 
+    field_size = []
+    |> append_if(size >= 4_294_967_295, 8)
+    |> append_if(size_compressed >= 4_294_967_295, 8)
+    |> append_if(offset >= 4_294_967_295, 8)
+    |> Enum.sum
+
     [
       <<0x01, 0x00>>,
-      encode_16(16),
-      encode_64(size),
-      encode_64(size_compressed)
+      encode_16(field_size)
     ]
+    |> append_if(size >= 4_294_967_295, encode_64(size))
+    |> append_if(size_compressed >= 4_294_967_295, encode_64(size_compressed))
+    |> append_if(offset >= 4_294_967_295, encode_64(offset))
+  end
+
+  defp append_if(list, condition, item) do
+    if condition, do: list ++ [item], else: list
   end
 end

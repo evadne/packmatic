@@ -1,4 +1,4 @@
-FROM elixir:1.9.2
+FROM elixir:1.15.7
 ENV MIX_ENV=test
 RUN mix local.hex --force && mix local.rebar --force
 
