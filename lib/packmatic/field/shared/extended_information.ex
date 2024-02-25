@@ -37,19 +37,22 @@ defimpl Packmatic.Field, for: Packmatic.Field.Shared.ExtendedInformation do
     size = target.size
     size_compressed = target.size_compressed
 
-    case offset do 
-      x when x >= 4_294_967_295 -> 
-        [
-          <<0x01, 0x00>>,
-          encode_16(16)
-        ]
-      _ -> 
-        [
-          <<0x01, 0x00>>,
-          encode_16(16),
-          encode_64(size),
-          encode_64(size_compressed)
-        ]
-    end
+    field_size = []
+    |> append_if(size >= 4_294_967_295, 8)
+    |> append_if(size_compressed >= 4_294_967_295, 8)
+    |> append_if(offset >= 4_294_967_295, 8)
+    |> Enum.sum
+
+    [
+      <<0x01, 0x00>>,
+      encode_16(field_size)
+    ]
+    |> append_if(size >= 4_294_967_295, encode_64(size))
+    |> append_if(size_compressed >= 4_294_967_295, encode_64(size_compressed))
+    |> append_if(offset >= 4_294_967_295, encode_64(offset))
+  end
+
+  defp append_if(list, condition, item) do
+    if condition, do: list ++ [item], else: list
   end
 end

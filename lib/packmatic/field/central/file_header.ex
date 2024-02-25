@@ -73,7 +73,15 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.FileHeader do
     entry_timestamp = encode_timestamp(target)
     entry_extra_timestamp = encode_extended_timestamp(target)
     entry_extra_zip64 = encode_zip64_info(target)
-    entry_extras = [entry_extra_timestamp, entry_extra_zip64]
+
+    size_compressed = if target.size_compressed >= 4_294_967_295, do: 4_294_967_295, else: encode_32(target.size_compressed)
+    size = if target.size >= 4_294_967_295, do: 4_294_967_295, else: encode_32(target.size)
+
+    entry_extras = if target.size_compressed >= 4_294_967_295 or target.size >= 4_294_967_295 or target.offset >= 4_294_967_295 do
+      [entry_extra_timestamp, entry_extra_zip64]
+    else
+      [entry_extra_timestamp]
+    end
 
     [
       <<0x50, 0x4B, 0x01, 0x02>>,
@@ -84,8 +92,8 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.FileHeader do
       encode_16(8),
       entry_timestamp,
       encode_32(target.checksum),
-      <<0xFF, 0xFF, 0xFF, 0xFF>>,
-      <<0xFF, 0xFF, 0xFF, 0xFF>>,
+      size_compressed,
+      size,
       encode_16(:erlang.iolist_size(target.path)),
       encode_16(:erlang.iolist_size(entry_extras)),
       encode_16(0),
