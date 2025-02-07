@@ -13,6 +13,7 @@ defmodule Packmatic.Encoder.EncodingState do
           remaining: [Entry.t()],
           zstream: nil | :zlib.zstream(),
           bytes_emitted: non_neg_integer(),
+          options: Keyword.t(),
           on_error: :skip | :halt,
           on_event: nil | Event.handler_fun()
         }
@@ -25,6 +26,7 @@ defmodule Packmatic.Encoder.EncodingState do
             remaining: [],
             zstream: nil,
             bytes_emitted: 0,
+            options: [],
             on_error: :skip,
             on_event: nil
 end

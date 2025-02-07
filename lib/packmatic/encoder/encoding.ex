@@ -27,10 +27,10 @@ defmodule Packmatic.Encoder.Encoding do
   def encoding_start(%Manifest{valid?: true} = manifest, options) do
     id = make_ref()
     entries = manifest.entries
-    on_error = Keyword.get(options, :on_error, :halt)
-    on_event = Keyword.get(options, :on_event)
+    {on_error, options} = Keyword.pop(options, :on_error, :halt)
+    {on_event, options} = Keyword.pop(options, :on_event)
 
-    %EncodingState{stream_id: id, remaining: entries, on_error: on_error, on_event: on_event}
+    %EncodingState{stream_id: id, remaining: entries, on_error: on_error, on_event: on_event, options: options}
     |> Event.emit_stream_started()
     |> cont()
   end
@@ -149,9 +149,10 @@ defmodule Packmatic.Encoder.Encoding do
     # > undocumented feature.
     #
     # With the default WindowBits value of 15, deflate fails on macOS.
+    compression_level = state.options[:compression_level] || :default
 
     zstream = :zlib.open()
-    :ok = :zlib.deflateInit(zstream, :default, :deflated, -15, 8, :default)
+    :ok = :zlib.deflateInit(zstream, compression_level, :deflated, -15, 8, :default)
     %{state | zstream: zstream}
   end
 

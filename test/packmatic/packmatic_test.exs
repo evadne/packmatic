@@ -170,6 +170,32 @@ defmodule PackmaticTest do
     assert {_, 0} = System.cmd("zipinfo", [context.file_path])
   end
 
+  test "with compression_level" do
+    {:ok, file_larger} = Briefly.create()
+    {:ok, file_smaller} = Briefly.create()
+
+    [
+      {{:stream, Stream.repeatedly(fn -> "a" end) |> Stream.take(8 * 1_024)}, "compressable.bin"}
+    ]
+    |> build_manifest()
+    |> Packmatic.build_stream(compression_level: :none)
+    |> Stream.into(File.stream!(file_larger, [:write]))
+    |> Stream.run()
+
+    [
+      {{:stream, Stream.repeatedly(fn -> "a" end) |> Stream.take(8 * 1_024)}, "compressable.bin"}
+    ]
+    |> build_manifest()
+    |> Packmatic.build_stream(compression_level: 9)
+    |> Stream.into(File.stream!(file_smaller, [:write]))
+    |> Stream.run()
+
+    assert {_, 0} = System.cmd("zipinfo", [file_larger])
+    assert {_, 0} = System.cmd("zipinfo", [file_smaller])
+
+    assert File.stat!(file_larger).size > File.stat!(file_smaller).size
+  end
+
   defp get_sorted_zip_files(target) do
     get_zip_files(target) |> Enum.sort()
   end
