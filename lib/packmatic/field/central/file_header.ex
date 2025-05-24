@@ -91,7 +91,9 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.FileHeader do
       encode_16(0),
       encode_16(0),
       encode_16(0),
-      encode_32(0),
+      # File permission, i.e 644 on UNIX
+      # 0o100644 <<< 16
+      encode_32(0x81A40000),
       encode_32(target.offset),
       target.path,
       entry_extras
