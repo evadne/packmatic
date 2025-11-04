@@ -72,7 +72,7 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.DirectoryEnd do
     ]
   end
 
-  defp encode_zip64_record(target) do
+  defp encode_zip64_record(%@for{} = target) do
     [
       <<0x50, 0x4B, 0x06, 0x06>>,
       encode_64(44),
@@ -87,7 +87,7 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.DirectoryEnd do
     ]
   end
 
-  defp encode_zip64_record_locator(target) do
+  defp encode_zip64_record_locator(%@for{} = target) do
     [
       <<0x50, 0x4B, 0x06, 0x07>>,
       encode_32(0),
@@ -96,7 +96,7 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.DirectoryEnd do
     ]
   end
 
-  defp encode_zip32_record(target) do
+  defp encode_zip32_record(%@for{} = target) do
     [
       <<0x50, 0x4B, 0x05, 0x06>>,
       encode_16(0),

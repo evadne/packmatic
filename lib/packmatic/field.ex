@@ -1,7 +1,6 @@
 defprotocol Packmatic.Field do
   @moduledoc """
-  Represents data fields used internally by `Packmatic.Encoder` to represent information which
-  make up the Zip format.
+  Represents data fields used internally by `Packmatic.Encoder` to build the Zip archive.
   """
 
   @spec encode(t()) :: iodata() | no_return()

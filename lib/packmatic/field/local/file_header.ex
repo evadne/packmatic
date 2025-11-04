@@ -44,8 +44,9 @@ defmodule Packmatic.Field.Local.FileHeader do
       - Extended Timestamp, see `Packmatic.Field.Shared.ExtendedTimestamp`
   """
 
-  @type t :: %__MODULE__{path: Path.t(), timestamp: DateTime.t()}
-  defstruct path: nil, timestamp: nil
+  alias Packmatic.Manifest.Entry
+  @type t :: %__MODULE__{path: Path.t(), timestamp: DateTime.t(), method: Entry.method()}
+  defstruct path: nil, timestamp: nil, method: :deflate
 end
 
 defimpl Packmatic.Field, for: Packmatic.Field.Local.FileHeader do
@@ -61,7 +62,7 @@ defimpl Packmatic.Field, for: Packmatic.Field.Local.FileHeader do
       <<0x50, 0x4B, 0x03, 0x04>>,
       encode_16(45),
       encode_16(2056),
-      encode_16(8),
+      encode_compression_method(target),
       entry_timestamp,
       encode_32(0),
       encode_32(0),
@@ -73,14 +74,22 @@ defimpl Packmatic.Field, for: Packmatic.Field.Local.FileHeader do
     ]
   end
 
+  defp encode_compression_method(%@for{method: :store}) do
+    encode_16(0)
+  end
+
+  defp encode_compression_method(%@for{method: :deflate}) do
+    encode_16(8)
+  end
+
   defp encode_timestamp(target) do
-    Field.encode(%Field.Shared.Timestamp{
+    @protocol.encode(%Field.Shared.Timestamp{
       timestamp: target.timestamp
     })
   end
 
   defp encode_extended_timestamp(target) do
-    Field.encode(%Field.Shared.ExtendedTimestamp{
+    @protocol.encode(%Field.Shared.ExtendedTimestamp{
       timestamp: target.timestamp
     })
   end

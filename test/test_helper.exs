@@ -1,4 +1,4 @@
-ExUnit.start()
+ExUnit.start(exclude: [:skip])
 
 if System.get_env("TEAMCITY_VERSION") do
   ExUnit.configure(formatters: [TeamCityFormatter])

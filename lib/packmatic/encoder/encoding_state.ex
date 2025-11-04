@@ -11,8 +11,8 @@ defmodule Packmatic.Encoder.EncodingState do
           current: nil | {Entry.t(), Source.t(), EntryInfo.t()},
           encoded: [{Entry.t(), {:ok, EntryInfo.t()} | {:error, term()}}],
           remaining: [Entry.t()],
-          zstream: nil | :zlib.zstream(),
           bytes_emitted: non_neg_integer(),
+          compressor: nil | Compressor.t(),
           on_error: :skip | :halt,
           on_event: nil | Event.handler_fun()
         }
@@ -23,8 +23,8 @@ defmodule Packmatic.Encoder.EncodingState do
             current: nil,
             encoded: [],
             remaining: [],
-            zstream: nil,
             bytes_emitted: 0,
+            compressor: nil,
             on_error: :skip,
             on_event: nil
 end

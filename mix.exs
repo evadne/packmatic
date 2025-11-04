@@ -4,8 +4,8 @@ defmodule Packmatic.MixProject do
   def project do
     [
       app: :packmatic,
-      version: "1.2.0",
-      elixir: "~> 1.15.7",
+      version: "2.0.0",
+      elixir: "~> 1.19",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       package: package(),
@@ -35,25 +35,28 @@ defmodule Packmatic.MixProject do
 
   defp deps(:dev) do
     [
-      {:dialyxir, "~> 1.1.0", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.24.2", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.4.6", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.39.1", only: :dev, runtime: false}
     ]
   end
 
   defp deps(:test) do
     [
-      {:briefly, "~> 0.5.0", only: :test},
+      {:briefly, "~> 0.5.1", only: :test},
       {:bypass, "~> 2.1.0", only: :test},
-      {:mox, "~> 1.0.0", only: :test},
+      {:cowboy, "~> 2.14.2", only: :test},
+      {:plug, "~> 1.18.1", only: :test},
+      {:plug_cowboy, "~> 2.7.4", only: :test},
+      {:mox, "~> 1.2.0", only: :test},
       {:teamcity_formatter, github: "prook/teamcity_formatter", only: :test, runtime: false},
-      {:timex, "~> 3.7.5", only: :test},
-      {:stream_data, "~> 0.5.0", only: :test}
+      {:timex, "~> 3.7.13", only: :test},
+      {:stream_data, "~> 1.2.0", only: :test}
     ]
   end
 
   defp deps(:prod) do
     [
-      {:httpoison, "~> 2.2.1"}
+      {:req, "~> 0.5.15"}
     ]
   end
 

@@ -32,8 +32,8 @@ defmodule PackmaticTest do
 
   test "with timestamp", context do
     #
-    # Given that the Entry has been created with a timestamp, the parsed timestamp from zipinfo
-    # should be within 1 minute of the timestamp given.
+    # Given that the Entry has been created with a timestamp, the parsed timestamp from zipinfo,
+    # which has minute resolution, should be within 1 minute of the timestamp given.
     #
     # NB: tests text output from zipinfo, possibly fragile. Zip module in Erlang does not support
     # returning metadata, and has compatibility problems with Zip64, which is used by Packmatic,
@@ -53,7 +53,69 @@ defmodule PackmaticTest do
     assert [_, timestamp_string] = Regex.run(pattern, result)
     assert {:ok, timestamp_value} = Timex.parse(timestamp_string, "%y-%b-%d %H:%M", :strftime)
     timestamp_drift = DateTime.from_naive!(timestamp_value, "Etc/UTC") |> DateTime.diff(timestamp)
-    assert abs(timestamp_drift) < 60
+    assert abs(timestamp_drift) <= 60
+  end
+
+  test "with attributes", context do
+    import Bitwise
+
+    [
+      [source: build_file_source(), path: "1"],
+      [source: build_file_source(), path: "2", attributes: 0o123],
+      [source: build_file_source(), path: "3", attributes: [0o456, uid: 0, gid: 0]]
+    ]
+    |> Packmatic.Manifest.create()
+    |> Packmatic.build_stream()
+    |> Stream.into(File.stream!(context.file_path, [:write]))
+    |> Stream.run()
+
+    {:ok, directory} = Briefly.create(type: :directory)
+    options = [cwd: to_charlist(directory), extra: [:extended_timestamp, :uid_gid]]
+    {:ok, files} = :zip.unzip(to_charlist(context.file_path), options)
+
+    list =
+      Enum.map(files, fn path ->
+        path = to_string(path)
+        {:ok, stat} = File.stat(path)
+        {Path.relative_to(path, directory), stat}
+      end)
+
+    assert {_, %{mode: mode}} = List.keyfind(list, "1", 0)
+    assert 0o644 = mode &&& 0o777
+
+    assert {_, %{mode: mode}} = List.keyfind(list, "2", 0)
+    assert 0o123 = mode &&& 0o777
+
+    # uid and gid not set by :zip
+    assert {_, %{mode: mode}} = List.keyfind(list, "3", 0)
+    assert 0o456 = mode &&& 0o777
+  end
+
+  test "with different compression methods", context do
+    [
+      [source: build_file_source(), path: "1", method: :deflate],
+      [source: build_file_source(), path: "2", method: :store],
+      [source: build_file_source(), path: "3", method: :deflate],
+      [source: build_file_source(), path: "4", method: :store],
+      [source: build_file_source(), path: "5", method: :deflate]
+    ]
+    |> Packmatic.Manifest.create()
+    |> Packmatic.build_stream()
+    |> Stream.into(File.stream!(context.file_path, [:write]))
+    |> Stream.run()
+
+    {:ok, zip_handle} = :zip.zip_open(to_charlist(context.file_path), [:memory])
+    {:ok, {_, result}} = :zip.zip_get(~c"1", zip_handle)
+    assert 8388608 = :erlang.iolist_size(result)
+    {:ok, {_, result}} = :zip.zip_get(~c"2", zip_handle)
+    assert 8388608 = :erlang.iolist_size(result)
+    {:ok, {_, result}} = :zip.zip_get(~c"3", zip_handle)
+    assert 8388608 = :erlang.iolist_size(result)
+    {:ok, {_, result}} = :zip.zip_get(~c"4", zip_handle)
+    assert 8388608 = :erlang.iolist_size(result)
+    {:ok, {_, result}} = :zip.zip_get(~c"5", zip_handle)
+    assert 8388608 = :erlang.iolist_size(result)
+    :ok = :zip.zip_close(zip_handle)
   end
 
   test "with dynamic invocations", context do
@@ -77,11 +139,10 @@ defmodule PackmaticTest do
 
   test "with local URL stream", context do
     bypass = Bypass.open()
+    body = build_byte_stream() |> Stream.take(10) |> Enum.to_list()
 
     Bypass.expect(bypass, fn conn ->
-      build_byte_stream()
-      |> Stream.take(10)
-      |> Packmatic.Conn.send_chunked(conn, "a.bin")
+      Packmatic.Conn.send_chunked(body, conn, "a.bin")
     end)
 
     [{{:url, "http://localhost:#{bypass.port}"}, "a.bin"}]
@@ -89,6 +150,18 @@ defmodule PackmaticTest do
     |> Packmatic.build_stream()
     |> Stream.into(File.stream!(context.file_path, [:write]))
     |> Stream.run()
+
+    {:ok, zip_handle} = :zip.zip_open(to_charlist(context.file_path), [:memory])
+    {:ok, result} = :zip.zip_get(~c"a.bin", zip_handle)
+    :ok = :zip.zip_close(zip_handle)
+
+    # Assert the 10MB file survives the roundtrip
+    assert {~c"a.bin", unzipped_body} = result
+    lhs = IO.iodata_to_binary(body)
+    rhs = IO.iodata_to_binary(unzipped_body)
+    assert lhs == rhs
+    assert 10_485_760 == byte_size(lhs)
+    assert 10_485_760 == byte_size(rhs)
   end
 
   describe "with URL streams" do
@@ -104,10 +177,11 @@ defmodule PackmaticTest do
       end)
 
       url = "http://localhost:#{bypass.port}"
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} = HTTPoison.get(url)
-      assert ["a", "b/c", "b/d"] == get_sorted_zip_files(body)
+      {:ok, %Req.Response{status: 200, body: body}} = Req.get(url, raw: true)
+      assert ["a", "b/c", "b/d"] == get_sorted_zip_files(IO.iodata_to_binary(body))
     end
 
+    @tag external: true
     test "can download from existing URLs", context do
       urls = [
         "https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg",
@@ -134,7 +208,9 @@ defmodule PackmaticTest do
 
       entries = [
         {{:url, url_not_found}, "not_found.bin"},
-        {{:url, url_partial}, "partial.bin"}
+        {{:url,
+          {url_partial, [retry: false, receive_timeout: 1000, connect_options: [timeout: 5000]]}},
+         "partial.bin"}
       ]
 
       [manifest: build_manifest(entries)]
@@ -159,14 +235,31 @@ defmodule PackmaticTest do
     end
   end
 
-  @tag external: true
-  test "with large file", context do
-    [{{:random, (4096 + 1) * 1_048_576}, "a"}]
+  @tag :skip
+  test "with many small files", context do
+    List.duplicate({{:random, 1}, "a"}, 1_048_576)
     |> build_manifest()
     |> Packmatic.build_stream()
     |> Stream.into(File.stream!(context.file_path, [:write]))
     |> Stream.run()
 
+    assert {_, 0} = System.cmd("zipinfo", [context.file_path])
+  end
+
+  @tag external: true
+  test "with large file", context do
+    # Using 8x 1GB random chunks
+    IO.inspect(["starting large"])
+
+    1..8
+    |> Enum.map(fn x -> {{:random, 1024 * 1_048_576}, "#{x}.bin"} end)
+    |> build_manifest()
+    |> Packmatic.build_stream()
+    |> Stream.into(File.stream!(context.file_path, [:write]))
+    |> Stream.run()
+
+    IO.inspect(["large file size is now", context.file_path, File.stat!(context.file_path)])
+    File.cp(context.file_path, "/tmp/out2.zip")
     assert {_, 0} = System.cmd("zipinfo", [context.file_path])
   end
 

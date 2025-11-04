@@ -6,7 +6,7 @@ defmodule Packmatic.Field.Shared.ExtendedTimestamp do
 
   ## Structure
 
-  ### Shared Extended Timestamp (UTc)
+  ### Shared Extended Timestamp (UTC)
 
   Size     | Content
   -------- | -

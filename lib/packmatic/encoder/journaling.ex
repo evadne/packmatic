@@ -20,7 +20,7 @@ defmodule Packmatic.Encoder.Journaling do
   def journaling_start(state) do
     cont(%JournalingState{
       stream_id: state.stream_id,
-      remaining: state.encoded,
+      remaining: Enum.reverse(state.encoded),
       offset: state.bytes_emitted,
       on_event: state.on_event
     })

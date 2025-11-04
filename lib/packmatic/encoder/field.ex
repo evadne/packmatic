@@ -10,7 +10,8 @@ defmodule Packmatic.Encoder.Field do
   def encode_local_file_header(%Entry{} = entry) do
     encode(%Local.FileHeader{
       path: entry.path,
-      timestamp: entry.timestamp
+      timestamp: entry.timestamp,
+      method: entry.method
     })
   end
 
@@ -29,7 +30,9 @@ defmodule Packmatic.Encoder.Field do
       checksum: info.checksum,
       size_compressed: info.size_compressed,
       size: info.size,
-      timestamp: entry.timestamp
+      timestamp: entry.timestamp,
+      attributes: Entry.Attributes.build(entry.attributes),
+      method: entry.method
     })
   end
 

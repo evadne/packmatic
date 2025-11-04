@@ -49,7 +49,10 @@ defmodule PackmaticTest.Builder do
 
     partial_next_fun = fn _ ->
       Agent.update(partial_agent, fn count ->
-        if count > 5, do: PackmaticTest.SocketProxy.halt(proxy)
+        if count > 5 do
+          PackmaticTest.SocketProxy.halt(proxy)
+        end
+
         count + 1
       end)
     end

@@ -144,14 +144,14 @@ defmodule PackmaticTest.SocketProxy do
         accept_loop(upstream_socket, downstream_socket)
 
       {:tcp_closed, ^upstream_socket} ->
-        :gen_tcp.shutdown(downstream_socket, :write)
+        :gen_tcp.shutdown(downstream_socket, :read_write)
 
       {:tcp_closed, ^downstream_socket} ->
-        :gen_tcp.shutdown(upstream_socket, :write)
+        :gen_tcp.shutdown(upstream_socket, :read_write)
 
       :halt ->
-        :gen_tcp.shutdown(upstream_socket, :write)
-        :gen_tcp.shutdown(downstream_socket, :write)
+        :gen_tcp.shutdown(upstream_socket, :read_write)
+        :gen_tcp.shutdown(downstream_socket, :read_write)
     end
   end
 end

@@ -35,15 +35,15 @@ defimpl Packmatic.Field, for: Packmatic.Field.Shared.Timestamp do
     encode_datetime(target.timestamp)
   end
 
-  defp encode_datetime(%{year: year}) when year >= 2108 do
+  defp encode_datetime(%DateTime{year: year}) when year >= 2108 do
     encode_datetime(DateTime.from_naive!(~N[2107-12-31 23:59:58], "Etc/UTC"))
   end
 
-  defp encode_datetime(%{year: year}) when year < 1980 do
+  defp encode_datetime(%DateTime{year: year}) when year < 1980 do
     encode_datetime(DateTime.from_naive!(~N[1980-01-01 00:00:00], "Etc/UTC"))
   end
 
-  defp encode_datetime(datetime) do
+  defp encode_datetime(%DateTime{} = datetime) do
     <<time::size(16)-big>> = <<
       datetime.hour::size(5)-big,
       datetime.minute::size(6)-big,
