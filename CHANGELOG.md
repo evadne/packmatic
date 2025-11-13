@@ -7,6 +7,31 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [2.0.0]
+
+### Changed
+
+- Upgraded targeted Elixir and OTP versions
+
+- Revised URL Source
+  - Changed iBrowse/HTTPotion to Req/Finch/Mint
+  - Added dedicated Buffer capability
+
+- Added support for Extended Attributes
+  - Added UID/GID information
+  - Added support for default and custom File Modes
+
+- Added support for Compression Methods
+  - Added support for STORE method
+  - Cleaned up support for DEFLATE method
+
+- Enhanced Zip64 Compatibility
+  - Fixed offset not always emitted in Zip64 format
+  - Added offset in Zip64 Extended Information extra field
+
+- Enhanced macOS Compatibility
+  - Fixed journaling to list all files in the order they were encoded
+
 ## [1.2.0] — 7 January 2024
 
 ### Changed

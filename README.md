@@ -313,9 +313,12 @@ During design and prototype development of this library, the Author has drawn in
 
 The Author wishes to thank the following individuals:
 
-- [Alvise Susmel][alvises] for proposing and testing [Encoder Events][gh-3]
-- [Christoph Geschwind][1st8] for highlighting [the need for explicit cleanup logic][gh-8]
+- [Alvise Susmel][alvises] for proposing and testing Encoder Events
+- [Christoph Geschwind][1st8] for cleanup refinements
 - Derek Kraan & Kyle Steger for Stream debugging
+- [Peter Nicholls][pnicholls] for Zip64 offset fixes
+- [Stefano Gessa][sgessa] for Erlang/OTP 27 compatibility and permission fixes
+- [David Bernheisel][dbernheisel] for DEFLATE level enhancements
 
 ## Reference
 
@@ -324,5 +327,6 @@ The Author wishes to thank the following individuals:
 
 [1st8]: https://github.com/1st8
 [alvises]: https://github.com/alvises
-[gh-3]: https://github.com/evadne/packmatic/issues/3
-[gh-8]: https://github.com/evadne/packmatic/pull/8
+[pnicholls]: https://github.com/pnicholls
+[sgessa]: https://github.com/sgessa
+[dbernheisel]: https://github.com/dbernheisel
