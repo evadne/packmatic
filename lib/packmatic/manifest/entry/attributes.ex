@@ -22,7 +22,7 @@ defmodule Packmatic.Manifest.Entry.Attributes do
   @type entry :: mode | proplist
 
   @typedoc """
-  The short-hand UNIX mode of the entry; for example, 0o777 = rwxrwxrwx.
+  The short-hand UNIX mode of the entry; for example, `0o777` = `rwxrwxrwx`.
   See `:file.change_mode/2` for further information.
   """
   @type mode :: 0o000..0o777

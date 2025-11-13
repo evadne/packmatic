@@ -1,11 +1,12 @@
 defmodule Packmatic.Compressor do
   @moduledoc """
-  The Compressor module is responsible for compressing source data for placement into 
-  the Zip archive. Further Compressors should comply to the behaviour in this module.
+  The Compressor is responsible for compressing source data for placement into the Zip archive.
+  The Zip format supports different types of compression methods, so many different Compressors
+  can be created, as long as they conform to the behaviour.
   """
 
-  @typedoc "Represents a Compressor being used in the Encoder"
-  @type t :: {module :: module(), init_arg :: term(), state :: term()}
+  @typedoc "Represents a Compressor being used in the Encoder."
+  @opaque t :: {module :: module(), init_arg :: term(), state :: term()}
 
   @type init_arg :: term()
   @type state :: term()
@@ -20,15 +21,20 @@ defmodule Packmatic.Compressor do
   @callback open(init_arg) :: {:ok, data, state} | {:error, reason}
 
   @doc """
-  Iterates the Compressor with the incoming data, compresses it and emits both the
-  compressed data and an updated state.
+  Iterates the Compressor with the incoming data, compresses it and emits both the compressed
+  data, and if necessary, an updated state.
   """
   @callback next(state, data) :: {:ok, data, state} | {:error, reason}
 
   @doc """
-  Finalises the Compressor for end of input stream. The Compressor may take the opportunity
-  to emit a final part of the data stream which closes the compressed stream, however, no
-  further calls are expected from the Encoder so all cleanup should be done here.
+  Closes down the Compressor at end of input stream. This is called when the input has been
+  fully read (hit EOF) or further data is otherwise no longer expected for the input. When
+  called, the Compressor may take the opportunity to emit a final part of the data stream,
+  flushing its internal buffers. The Compressor is expected to then have emitted the entire
+  data stream that can be used to reconstruct the input.
+
+  After `c:close/1`, the Encoder may call `c:reset/2` again to compress a new input stream,
+  or call `c:finalise/1` to close the Compressor down for good.
   """
   @callback close(state) :: {:ok, data, state} | {:error, reason}
 
@@ -42,8 +48,9 @@ defmodule Packmatic.Compressor do
 
   @doc """
   Closes the compressor for good. All external resources should be released here; no further calls 
-  will be made by the Encoder past this point. Prior to this call, close/1 should have been invoked
-  to mark the end of a previous stream.
+  will be made by the Encoder past this point. Prior to this call, `c:close/1` should have been
+  invoked to mark the end of a previous stream, so the Compressor is not expected to emit any
+  further data.
   """
   @callback finalise(state) :: :ok | {:error, reason}
 
@@ -52,16 +59,22 @@ defmodule Packmatic.Compressor do
   for a new file to be compressed.
 
   If the new Compression Method will result in the same Compressor being used again, then the existing
-  Compressor will be reset (via `callback: reset/1`); this may result in the existing Compressor being
-  reused. If the new Compression Method requires a different Compressor, for example the method was
-  `:store` but is then changed to `:deflate` for the subsequent entry, then the old Compressor will
-  be closed and a new one will be opened in all scenarios.
+  Compressor will be reset (via `c:reset/2`); this may result in the existing Compressor being
+  reused:
+
+  1. If the new Compression Method requires a different Compressor, for example the method was
+     `:store` but is then changed to `:deflate` for the subsequent entry, then the old Compressor will
+     be closed and a new one will be opened in all scenarios.
+
+  2. If the new Compression Method is resolved to the same Compressor, regardless of whether the
+     Initialisation Argument is the same, `c:reset/2` will be called and it would be up to the
+     relevant callback module to handle this.
 
   Called by `Packmatic.Encoder`.
   """
-  
-  @spec build(compressor :: t | nil, compression_method :: Packmatic.Manifest.Entry.method()) :: 
-    {:ok, data(), compressor :: t()} | {:error, reason()}
+
+  @spec build(compressor :: t | nil, compression_method :: Packmatic.Manifest.Entry.method()) ::
+          {:ok, data(), compressor :: t()} | {:error, reason()}
 
   def build(compressor, compression_method) do
     with {:ok, module, init_arg} <- resolve(compression_method),

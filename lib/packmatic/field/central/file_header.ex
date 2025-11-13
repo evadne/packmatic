@@ -65,7 +65,7 @@ defmodule Packmatic.Field.Central.FileHeader do
 
   alias Packmatic.Manifest.Entry
   alias Packmatic.Manifest.Entry.Attributes
-  
+
   @type t :: %__MODULE__{
           offset: non_neg_integer(),
           path: Path.t(),
@@ -133,7 +133,7 @@ defimpl Packmatic.Field, for: Packmatic.Field.Central.FileHeader do
       entry_extras
     ]
   end
-  
+
   defp encode_compression_method(%@for{method: :store}) do
     encode_16(0)
   end

@@ -106,15 +106,15 @@ defmodule PackmaticTest do
 
     {:ok, zip_handle} = :zip.zip_open(to_charlist(context.file_path), [:memory])
     {:ok, {_, result}} = :zip.zip_get(~c"1", zip_handle)
-    assert 8388608 = :erlang.iolist_size(result)
+    assert 8_388_608 = :erlang.iolist_size(result)
     {:ok, {_, result}} = :zip.zip_get(~c"2", zip_handle)
-    assert 8388608 = :erlang.iolist_size(result)
+    assert 8_388_608 = :erlang.iolist_size(result)
     {:ok, {_, result}} = :zip.zip_get(~c"3", zip_handle)
-    assert 8388608 = :erlang.iolist_size(result)
+    assert 8_388_608 = :erlang.iolist_size(result)
     {:ok, {_, result}} = :zip.zip_get(~c"4", zip_handle)
-    assert 8388608 = :erlang.iolist_size(result)
+    assert 8_388_608 = :erlang.iolist_size(result)
     {:ok, {_, result}} = :zip.zip_get(~c"5", zip_handle)
-    assert 8388608 = :erlang.iolist_size(result)
+    assert 8_388_608 = :erlang.iolist_size(result)
     :ok = :zip.zip_close(zip_handle)
   end
 

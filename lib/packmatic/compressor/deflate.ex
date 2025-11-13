@@ -52,7 +52,7 @@ defmodule Packmatic.Compressor.Deflate do
     :ok = :zlib.deflateReset(state.zstream)
     {:ok, [], state}
   end
-  
+
   @impl Packmatic.Compressor
   def finalise(state) do
     :ok = :zlib.close(state.zstream)
