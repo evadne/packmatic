@@ -76,13 +76,14 @@ defmodule Packmatic.MixProject do
       nest_modules_by_prefix: [
         Packmatic.Manifest,
         Packmatic.Source,
+        Packmatic.Compressor,
         Packmatic.Field,
         Packmatic.Event
       ],
       groups_for_modules: [
         Events: [~r/Packmatic\.Event/],
         "Data Structs": [~r/\.Field/],
-        Helpers: [Packmatic.Conn]
+        "Auxiliary Modules": [Packmatic.Conn, Packmatic.Buffer]
       ]
     ]
   end

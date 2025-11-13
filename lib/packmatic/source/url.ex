@@ -32,7 +32,7 @@ defmodule Packmatic.Source.URL do
   def init({target, options}), do: init(target, options)
   def init(target), do: init(target, [])
 
-  def init(target, options) do
+  defp init(target, options) do
     with {:ok, reader_pid} <- :gen_statem.start_link(Reader, {target, options}, []),
          :ok <- :gen_statem.call(reader_pid, :connect) do
       {:ok, %__MODULE__{reader_pid: reader_pid}}

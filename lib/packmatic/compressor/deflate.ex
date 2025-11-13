@@ -5,10 +5,8 @@ defmodule Packmatic.Compressor.Deflate do
   """
 
   defmodule State do
-    @type t :: %__MODULE__{
-            zstream: :zlib.zstream()
-          }
-
+    @moduledoc false
+    @type t :: %__MODULE__{zstream: :zlib.zstream()}
     @enforce_keys ~w(zstream)a
     defstruct zstream: nil
   end

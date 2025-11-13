@@ -1,7 +1,9 @@
 defmodule Packmatic.Source.URL.Reader do
+  @moduledoc false
   alias Packmatic.Buffer
 
   defmodule Data do
+    @moduledoc false
     defstruct buffer_pid: nil, task_pid: nil
   end
 

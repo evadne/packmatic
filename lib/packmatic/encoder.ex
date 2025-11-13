@@ -23,7 +23,7 @@ defmodule Packmatic.Encoder do
   2.  **Journaling,** where each _successfully encoded_ Entry is journaled again at the end of the
       archive, with the Central Directory structure.
       
-      Both Zip and Zip64 formats are used for maximum flexibility.
+      Both Zip and Zip64 field formats are used for maximum compatibility.
     
       In case the `on_error` option is set to `:skip`, any source which has raised an error during
       its consumption will not be journaled. Due to the nature of streaming archives, this may
