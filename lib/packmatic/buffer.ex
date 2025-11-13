@@ -57,7 +57,7 @@ defmodule Packmatic.Buffer do
       {:keep_state_and_data, :postpone}
     else
       buffer = :queue.in(chunk, data.buffer)
-      buffer_size = buffer_size + byte_size(chunk)
+      buffer_size = buffer_size + :erlang.iolist_size(chunk)
       data = %{data | buffer: buffer}
       {:next_state, {:buffering, buffer_size}, data, {:reply, from, :ok}}
     end
@@ -80,9 +80,9 @@ defmodule Packmatic.Buffer do
 
   @impl :gen_statem
   def handle_event({:call, from}, :read, {:buffering, _}, data) do
-    buffer_data = IO.iodata_to_binary(:queue.to_list(data.buffer))
+    buffer_iodata = :queue.to_list(data.buffer)
     data = %{data | buffer: :queue.new()}
-    {:next_state, {:buffering, 0}, data, {:reply, from, buffer_data}}
+    {:next_state, {:buffering, 0}, data, {:reply, from, buffer_iodata}}
   end
 
   @impl :gen_statem

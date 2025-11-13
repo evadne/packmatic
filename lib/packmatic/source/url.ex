@@ -18,7 +18,7 @@ defmodule Packmatic.Source.URL do
   @spec init(init_arg) :: init_result
 
   @type t :: %__MODULE__{reader_pid: pid()}
-  @enforce_keys ~w()a
+  @enforce_keys ~w(reader_pid)a
   defstruct reader_pid: nil
 
   @impl Source
@@ -44,7 +44,8 @@ defmodule Packmatic.Source.URL do
   @impl Source
   def read(%__MODULE__{} = state) do
     with {:ok, buffer_pid} <- :gen_statem.call(state.reader_pid, :read),
-         data when is_binary(data) <- :gen_statem.call(buffer_pid, :read) do
+         buffer <- :gen_statem.call(buffer_pid, :read),
+         data when is_list(data) or is_binary(data) <- buffer do
       data
     else
       :eof ->
