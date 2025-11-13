@@ -10,7 +10,6 @@ defmodule Packmatic.Compressor do
 
   @type init_arg :: term()
   @type state :: term()
-  @type reason :: term()
   @type data :: iodata()
 
   @doc """
@@ -18,13 +17,13 @@ defmodule Packmatic.Compressor do
   such an argument was not specified then it should have been normalised to `[]`. The
   Compressor has the opportunity to emit the initial part of the data stream here.
   """
-  @callback open(init_arg) :: {:ok, data, state} | {:error, reason}
+  @callback open(init_arg) :: {:ok, data, state} | {:error, reason :: term()}
 
   @doc """
   Iterates the Compressor with the incoming data, compresses it and emits both the compressed
   data, and if necessary, an updated state.
   """
-  @callback next(state, data) :: {:ok, data, state} | {:error, reason}
+  @callback next(state, data) :: {:ok, data, state} | {:error, reason :: term()}
 
   @doc """
   Closes down the Compressor at end of input stream. This is called when the input has been
@@ -36,7 +35,7 @@ defmodule Packmatic.Compressor do
   After `c:close/1`, the Encoder may call `c:reset/2` again to compress a new input stream,
   or call `c:finalise/1` to close the Compressor down for good.
   """
-  @callback close(state) :: {:ok, data, state} | {:error, reason}
+  @callback close(state) :: {:ok, data, state} | {:error, reason :: term()}
 
   @doc """
   Closes the internal compression stream for the previous item and re-opens the Compressor for
@@ -44,7 +43,7 @@ defmodule Packmatic.Compressor do
   practice this callback is used to facilitate preservation of external resources that may
   be costly to open and close when compressing many items.
   """
-  @callback reset(state, init_arg) :: {:ok, data, state} | {:error, reason}
+  @callback reset(state, init_arg) :: {:ok, data, state} | {:error, reason :: term()}
 
   @doc """
   Closes the compressor for good. All external resources should be released here; no further calls 
@@ -52,7 +51,7 @@ defmodule Packmatic.Compressor do
   invoked to mark the end of a previous stream, so the Compressor is not expected to emit any
   further data.
   """
-  @callback finalise(state) :: :ok | {:error, reason}
+  @callback finalise(state) :: :ok | {:error, reason :: term()}
 
   @doc """
   Opens or resets the Compressor with the optional Initialisation Argument as specified in the Entry
@@ -74,7 +73,7 @@ defmodule Packmatic.Compressor do
   """
 
   @spec build(compressor :: t | nil, compression_method :: Packmatic.Manifest.Entry.method()) ::
-          {:ok, data(), compressor :: t()} | {:error, reason()}
+          {:ok, data(), compressor :: t()} | {:error, reason :: term()}
 
   def build(compressor, compression_method) do
     with {:ok, module, init_arg} <- resolve(compression_method),
