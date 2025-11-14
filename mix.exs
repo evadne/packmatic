@@ -42,16 +42,16 @@ defmodule Packmatic.MixProject do
 
   defp deps(:test) do
     [
-      {:briefly, "~> 0.5.1", only: :test},
-      {:bypass, "~> 2.1.0", only: :test},
-      {:cowboy, "~> 2.14.2", only: :test},
-      {:incendium, "~> 0.5.0", only: :test},
-      {:mox, "~> 1.2.0", only: :test},
-      {:plug_cowboy, "~> 2.7.5", only: :test},
-      {:plug, "~> 1.18.1", only: :test},
-      {:stream_data, "~> 1.2.0", only: :test},
-      {:teamcity_formatter, github: "prook/teamcity_formatter", only: :test, runtime: false},
-      {:timex, "~> 3.7.13", only: :test}
+      {:briefly, "~> 0.5.1", only: [:test, :dev]},
+      {:bypass, "~> 2.1.0", only: [:test, :dev]},
+      {:cowboy, "~> 2.14.2", only: [:test, :dev]},
+      {:incendium, "~> 0.5.0", only: [:test, :dev]},
+      {:mox, "~> 1.2.0", only: [:test, :dev]},
+      {:plug_cowboy, "~> 2.7.5", only: [:test, :dev]},
+      {:plug, "~> 1.18.1", only: [:test, :dev]},
+      {:stream_data, "~> 1.2.0", only: [:test, :dev]},
+      {:teamcity_formatter, github: "prook/teamcity_formatter", only: [:test, :dev], runtime: false},
+      {:timex, "~> 3.7.13", only: [:test, :dev]}
     ]
   end
 
