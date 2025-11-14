@@ -1,7 +1,7 @@
 defmodule Packmatic.Source.URL.Reader do
   @moduledoc false
   alias Packmatic.Buffer
-  
+
   # The general purpose of the URL Reader is to act as a read-through cache, which either
   # returns the underlying reference to the Buffer to be read from, or returns an error
   # if the Req request has failed. This is so that:
@@ -121,6 +121,8 @@ defmodule Packmatic.Source.URL.Reader do
 
     with {:ok, %{status: 200}} <- result do
       :ok = :gen_statem.call(buffer_pid, :finish)
+    else
+      _ -> :ok
     end
 
     :gen_statem.cast(parent_pid, {:request_finished, result})

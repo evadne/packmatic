@@ -28,14 +28,14 @@ defmodule Packmatic.MixProject do
   defp dialyzer do
     [
       plt_add_apps: [:mix, :iex, :ex_unit],
-      flags: ~w(error_handling no_opaque race_conditions underspecs unmatched_returns)a,
+      flags: ~w(error_handling no_opaque underspecs unmatched_returns)a,
       list_unused_filters: true
     ]
   end
 
   defp deps(:dev) do
     [
-      {:dialyxir, "~> 1.4.6", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4.7", only: :dev, runtime: false},
       {:ex_doc, "~> 0.39.1", only: :dev, runtime: false}
     ]
   end
@@ -47,7 +47,7 @@ defmodule Packmatic.MixProject do
       {:cowboy, "~> 2.14.2", only: :test},
       {:incendium, "~> 0.5.0", only: :test},
       {:mox, "~> 1.2.0", only: :test},
-      {:plug_cowboy, "~> 2.7.4", only: :test},
+      {:plug_cowboy, "~> 2.7.5", only: :test},
       {:plug, "~> 1.18.1", only: :test},
       {:stream_data, "~> 1.2.0", only: :test},
       {:teamcity_formatter, github: "prook/teamcity_formatter", only: :test, runtime: false},
@@ -57,7 +57,7 @@ defmodule Packmatic.MixProject do
 
   defp deps(:prod) do
     [
-      {:req, "~> 0.5.15"}
+      {:req, "~> 0.5.16"}
     ]
   end
 

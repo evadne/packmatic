@@ -19,13 +19,13 @@ defmodule Packmatic.Manifest.Entry do
 
   The `method` attribute represents how a particular file should be compressed by the Encoder, and
   are represented as `name` or `{name, options}`, for example:
-  
+
   - `:store`
-  
+
   - `:deflate`
-  
+
   - `{:deflate, level: :best_compression}`, where the level is of `t:zlib:zlevel/0`
-  
+
   For compatibility reasons, only STORE and DEFLATE methods are supported initially; further
   compression methods such as Zstandard can be added in the future, but they must remain representable
   within the General Purpose bits within the File Headers.

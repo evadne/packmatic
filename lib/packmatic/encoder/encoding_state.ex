@@ -1,10 +1,11 @@
 defmodule Packmatic.Encoder.EncodingState do
   @moduledoc false
+  alias Packmatic.Compressor
+  alias Packmatic.Encoder
+  alias Packmatic.Encoder.EncodingState.EntryInfo
   alias Packmatic.Event
   alias Packmatic.Manifest.Entry
   alias Packmatic.Source
-  alias Packmatic.Encoder
-  alias Packmatic.Encoder.EncodingState.EntryInfo
 
   @type t :: %__MODULE__{
           stream_id: Encoder.stream_id(),

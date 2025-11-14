@@ -2,10 +2,10 @@ defmodule Packmatic.Compressor.Deflate do
   @moduledoc """
   Provides “DEFLATE” compression method for use in Zip archives, which compresses
   the incoming data stream.
-  
+
   When specifying the Deflate compression method, the following values can be set
   in the initialisation argument:
-  
+
   - `:level`, which corresponds to `t:zlib.zlevel()`; the default is `:default`.
 
   - `:strategy`, which corresponds to `t:zlib.zstrategy()`; the default is `:default`.

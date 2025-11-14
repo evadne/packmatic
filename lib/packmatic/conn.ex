@@ -8,7 +8,7 @@ defmodule Packmatic.Conn do
   Convenience function which sends the stream to the conn. The content of the Stream will be sent
   with an appropriately configured `Content-Disposition` response header (as attachment), and the
   name provided will be encoded for maximum compatibility with browsers.
-  
+
   The encoding strategy follows [RFC 2231](https://datatracker.ietf.org/doc/html/rfc2231#section-4)
   and [RFC 5987](https://datatracker.ietf.org/doc/html/rfc5987#section-3.2) so as to allow reliable
   use of Unicode-based file names.
