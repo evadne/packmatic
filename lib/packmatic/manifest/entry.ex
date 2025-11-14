@@ -17,12 +17,18 @@ defmodule Packmatic.Manifest.Entry do
   aka `rw-r--r--` (owner read/write, others read only). For more information please see the type
   `t:Packmatic.Manifest.Entry.Attributes.entry/0`.
 
-  The `method` attribute represents how a particular file should be compressed by the Encoder.
+  The `method` attribute represents how a particular file should be compressed by the Encoder, and
+  are represented as `name` or `{name, options}`, for example:
+  
+  - `:store`
+  
+  - `:deflate`
+  
+  - `{:deflate, level: :best_compression}`, where the level is of `t:zlib:zlevel/0`
+  
   For compatibility reasons, only STORE and DEFLATE methods are supported initially; further
   compression methods such as Zstandard can be added in the future, but they must remain representable
-  within the General Purpose bits within the File Headers. The method can be specified as `:store`,
-  `:deflate`, etc. For compatibility reasons, further configuration for the underlying `:zlib` calls
-  is provided as presets only.
+  within the General Purpose bits within the File Headers.
   """
 
   @type t :: %__MODULE__{source: source, path: path, timestamp: timestamp}
@@ -74,5 +80,6 @@ defimpl Packmatic.Validator.Target, for: Packmatic.Manifest.Entry do
 
   def validate(%{method: :store}, :method), do: :ok
   def validate(%{method: :deflate}, :method), do: :ok
+  def validate(%{method: {:deflate, proplist}}, :method) when is_list(proplist), do: :ok
   def validate(%{method: _}), do: {:error, :invalid}
 end

@@ -1,6 +1,17 @@
 defmodule Packmatic.Source.URL.Reader do
   @moduledoc false
   alias Packmatic.Buffer
+  
+  # The general purpose of the URL Reader is to act as a read-through cache, which either
+  # returns the underlying reference to the Buffer to be read from, or returns an error
+  # if the Req request has failed. This is so that:
+  # 
+  # 1. In the scenario where the Req request is ongoing, all reads will go through the Buffer
+  #    and eventually the EOF will be read from the Buffer;
+  # 2. In the scenario where the underlying request fails at the beginning, or fails after
+  #    having returned some bytes, the Buffer will not hold the EOF, but eventually the Req
+  #    request will have finished and fed the error to the Reader, which returns it to the
+  #    Source when it next reads from the Reader.
 
   defmodule Data do
     @moduledoc false
@@ -77,6 +88,13 @@ defmodule Packmatic.Source.URL.Reader do
   @impl :gen_statem
   def handle_event(:cast, {:request_finished, _}, {:error, _}, _data) do
     :keep_state_and_data
+  end
+
+  @impl :gen_statem
+  def terminate(reason, _state, %Data{} = data) do
+    true = Process.exit(data.task_pid, reason)
+    :ok = :gen_statem.stop(data.buffer_pid, reason, :infinity)
+    :ok
   end
 
   defp task_fun(request, buffer_pid, parent_pid) do

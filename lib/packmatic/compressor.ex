@@ -134,6 +134,6 @@ defmodule Packmatic.Compressor do
   defp resolve(compression_method)
   defp resolve(:store), do: {:ok, __MODULE__.Store, []}
   defp resolve(:deflate), do: {:ok, __MODULE__.Deflate, []}
-  defp resolve({:deflate, level}), do: {:ok, __MODULE__.Deflate, [level: level]}
+  defp resolve({:deflate, options}), do: {:ok, __MODULE__.Deflate, options}
   defp resolve(_), do: :error
 end

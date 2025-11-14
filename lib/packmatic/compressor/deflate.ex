@@ -2,6 +2,13 @@ defmodule Packmatic.Compressor.Deflate do
   @moduledoc """
   Provides “DEFLATE” compression method for use in Zip archives, which compresses
   the incoming data stream.
+  
+  When specifying the Deflate compression method, the following values can be set
+  in the initialisation argument:
+  
+  - `:level`, which corresponds to `t:zlib.zlevel()`; the default is `:default`.
+
+  - `:strategy`, which corresponds to `t:zlib.zstrategy()`; the default is `:default`.
   """
 
   defmodule State do
@@ -14,7 +21,7 @@ defmodule Packmatic.Compressor.Deflate do
   @behaviour Packmatic.Compressor
 
   @impl Packmatic.Compressor
-  def open(_init_arg) do
+  def open(init_arg) do
     # See Erlang/OTP source for :zip.put_z_file/10
     # See http://erlang.org/doc/man/zlib.html#deflateInit-1
     #
@@ -25,10 +32,11 @@ defmodule Packmatic.Compressor.Deflate do
     #
     # With the default WindowBits value of 15, deflate fails on macOS.
 
-    # TODO: handle actual zlib crash
     zstream = :zlib.open()
     state = %State{zstream: zstream}
-    :ok = :zlib.deflateInit(zstream, :default, :deflated, -15, 8, :default)
+    level = Keyword.get(init_arg, :level, :default)
+    strategy = Keyword.get(init_arg, :strategy, :default)
+    :ok = :zlib.deflateInit(zstream, level, :deflated, -15, 8, strategy)
     {:ok, [], state}
   end
 
@@ -45,9 +53,11 @@ defmodule Packmatic.Compressor.Deflate do
   end
 
   @impl Packmatic.Compressor
-  def reset(state, _init_arg) do
-    # FIXME: use init_arg
+  def reset(state, init_arg) do
+    level = Keyword.get(init_arg, :level, :default)
+    strategy = Keyword.get(init_arg, :strategy, :default)
     :ok = :zlib.deflateReset(state.zstream)
+    :ok = :zlib.deflateParams(state.zstream, level, strategy)
     {:ok, [], state}
   end
 

@@ -74,12 +74,12 @@ defimpl Packmatic.Field, for: Packmatic.Field.Local.FileHeader do
     ]
   end
 
-  defp encode_compression_method(%@for{method: :store}) do
-    encode_16(0)
-  end
-
-  defp encode_compression_method(%@for{method: :deflate}) do
-    encode_16(8)
+  defp encode_compression_method(%@for{method: method}) do
+    case method do
+      :store -> encode_16(0)
+      :deflate -> encode_16(8)
+      {:deflate, _options} -> encode_16(8)
+    end
   end
 
   defp encode_timestamp(target) do

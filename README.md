@@ -93,7 +93,9 @@ Further, the optional fields are:
 
 - `:attributes`, which represents the UNIX attributes of the file. See `t:Packmatic.Manifest.Entry.Attributes.entry()` for further information.
 
-- `:method`, which represents the Compression Method as per the APPNOTE. It can be `:store` or `:deflate`, the default is `:deflate` meaning the file will be compressed with zib.
+- `:method`, which represents the Compression Method as per the APPNOTE. Generally, it should be `:store` or `:deflate`, the default is `:deflate` meaning the file will be compressed with zib. Further, `{:deflate, options}`, such as `{:deflate, level: :best_compression}` is possible where a specific compression level or strategy should be used.
+
+See `Packmatic.Manifest.Entry` for further information.
 
 Packmatic supports reading from any Source which conforms to the `Packmatic.Source` behaviour. To aid adoption and general implementation, there are built-in Sources as well; this is documented under [Source Types](#source-types). 
 

@@ -95,9 +95,9 @@ defmodule PackmaticTest do
     [
       [source: build_file_source(), path: "1", method: :deflate],
       [source: build_file_source(), path: "2", method: :store],
-      [source: build_file_source(), path: "3", method: :deflate],
+      [source: build_file_source(), path: "3", method: {:deflate, level: :best_compression}],
       [source: build_file_source(), path: "4", method: :store],
-      [source: build_file_source(), path: "5", method: :deflate]
+      [source: build_file_source(), path: "5", method: {:deflate, level: :best_speed}]
     ]
     |> Packmatic.Manifest.create()
     |> Packmatic.build_stream()

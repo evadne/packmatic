@@ -7,7 +7,7 @@ defmodule Packmatic.Buffer do
   following states:
 
   - Buffering: Where the buffer is in use. The Buffer is always in this state, but tracks
-    the number of bytes already bufferd. When it is not full, further calls to load data
+    the number of bytes already buffered. When it is not full, further calls to load data
     will return immediately; if the buffer is full, calls will not be handled until the
     buffer has been drained via the read call.
   - Finished: Where the buffer has been emptied and a call has marked the buffer as
