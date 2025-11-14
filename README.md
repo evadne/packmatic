@@ -91,7 +91,7 @@ Further, the optional fields are:
 
 - `:timestamp`, which represents the creation/modification timestamps of the file. Packmatic emits both the basic form (DOS / FAT) of the timestamp, and the Extended Timestamp Extra Field which represents the same value with higher precision and range.
 
-- `:attributes`, which represents the UNIX attributes of the file. See `t:Packmatic.Manifest.Entry.Attributes.entry()` for further information.
+- `:attributes`, which represents the UNIX attributes of the file. See `t:Packmatic.Manifest.Entry.Attributes.entry/0` for further information.
 
 - `:method`, which represents the Compression Method as per the APPNOTE. Generally, it should be `:store` or `:deflate`, the default is `:deflate` meaning the file will be compressed with zib. Further, `{:deflate, options}`, such as `{:deflate, level: :best_compression}` is possible where a specific compression level or strategy should be used.
 
