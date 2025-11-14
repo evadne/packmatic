@@ -1,9 +1,11 @@
+.DS_Store
 /_build
+/config/*.secret.exs
 /cover
 /deps
 /doc
+/incendium/*
 /.fetch
-erl_crash.dump
-*.ez
 *.beam
-/config/*.secret.exs
+*.dump
+*.ez
