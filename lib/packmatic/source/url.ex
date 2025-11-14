@@ -3,7 +3,15 @@ defmodule Packmatic.Source.URL do
   Represents content which can be acquired by downloading from a remote server via HTTP(S) in
   chunks. Each chunk is then pulled away by the Encoder, which is iterated by the Stream.
 
-  The underlying implementation is achieved via Req/Finch, which uses Mint.
+  The underlying implementation is achieved via Req/Finch, which uses Mint. As a result, the
+  options supported by `Req.new/1` can generally be used, with the following exceptions:
+  
+  - `:into` is used by the Source to read data, so it is always overridden;
+
+  - `:raw` is always overridden to `true`;
+  
+  - `:url` and `:method` are, by default, generated based on the existing target; the method
+    is `GET` by default, however you can change the method if you specify it as an option.
   """
 
   alias Packmatic.Source
