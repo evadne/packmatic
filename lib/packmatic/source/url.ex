@@ -22,7 +22,7 @@ defmodule Packmatic.Source.URL do
   @type options :: keyword()
 
   @type init_arg :: target | {target, options}
-  @type init_result :: {:ok, t}
+  @type init_result :: {:ok, t} | {:error, reason :: term()}
   @spec init(init_arg) :: init_result
 
   @type t :: %__MODULE__{reader_pid: pid()}

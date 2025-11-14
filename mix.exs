@@ -28,7 +28,7 @@ defmodule Packmatic.MixProject do
   defp dialyzer do
     [
       plt_add_apps: [:mix, :iex, :ex_unit],
-      flags: ~w(error_handling no_opaque underspecs unmatched_returns)a,
+      flags: ~w(error_handling extra_return missing_return unmatched_returns underspecs)a,
       list_unused_filters: true
     ]
   end

@@ -8,7 +8,7 @@ defmodule Packmatic.Source.File do
   @behaviour Source
 
   @type init_arg :: String.t()
-  @type init_result :: {:ok, t}
+  @type init_result :: {:ok, t} | {:error, reason :: term()}
   @spec init(init_arg) :: init_result
 
   @type t :: %__MODULE__{path: String.t(), device: File.io_device()}
