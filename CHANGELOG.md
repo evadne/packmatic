@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
-## [Unreleased]
+## [2.0.0] — 19 January 2026
 
 ### Changed
 
@@ -156,6 +156,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Initial Release.
 
 [unreleased]: https://github.com/evadne/packmatic/compare/master...develop
+[2.0.0]: https://github.com/evadne/packmatic/releases/tag/v2.0.0
 [1.2.0]: https://github.com/evadne/packmatic/releases/tag/v1.2.0
 [1.1.4]: https://github.com/evadne/packmatic/releases/tag/v1.1.4
 [1.1.3]: https://github.com/evadne/packmatic/releases/tag/v1.1.3
