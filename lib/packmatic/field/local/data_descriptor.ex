@@ -12,13 +12,15 @@ defmodule Packmatic.Field.Local.DataDescriptor do
   -------- | -
   4 bytes  | Signature
   4 bytes  | Checksum (CRC-32)
-  4 bytes  | Compressed Size (Bytes)
-  4 bytes  | Original Size (Bytes)
+  4/8 bytes | Compressed Size (Bytes)
+  4/8 bytes | Original Size (Bytes)
 
   #### Notes
 
-  1.  Although the APPNOTE indicates that Zip64 format should be used, 8-byte sizes crash the
-      Unarchiver process on macOS High Sierra, but a truncated one works totally fine.
+  1.  APPNOTE section 4.3.9 recommends 8-byte sizes when an entry exceeds the Zip32 limit and
+      permits them regardless of size. Packmatic uses 8-byte sizes only when required, retaining
+      compatibility with single-pass streaming decoders that select the descriptor width from the
+      number of bytes processed.
   """
 
   @type t :: %__MODULE__{
@@ -38,8 +40,16 @@ defimpl Packmatic.Field, for: Packmatic.Field.Local.DataDescriptor do
     [
       <<0x50, 0x4B, 0x07, 0x08>>,
       encode_32(target.checksum),
-      encode_32(target.size_compressed),
-      encode_32(target.size)
+      encode_sizes(target)
     ]
+  end
+
+  defp encode_sizes(target)
+       when fits_u32(target.size_compressed) and fits_u32(target.size) do
+    [encode_32(target.size_compressed), encode_32(target.size)]
+  end
+
+  defp encode_sizes(target) do
+    [encode_64(target.size_compressed), encode_64(target.size)]
   end
 end

@@ -220,6 +220,7 @@ See documentation for `Packmatic.Event` for a complete list of Event types.
 - macOS
   - Finder (High Sierra): OK
   - Finder (Sequoia): OK
+  - `/usr/bin/unzip` (Sequoia 15.5, Apple-modified Info-ZIP 6.00): OK
   - The Unarchiver (High Sierra): ?
   - Erlang/OTP 27+ (`:zip`): OK
 
@@ -308,6 +309,21 @@ defp chunk_packmatic_stream(stream) do
     _after_fun = fn _acc -> :ok end
   )
 end
+```
+
+## Decoder Compatibility Tests
+
+Decoder integration tests are tagged `integration` and excluded from the normal test suite. They
+generate an archive containing a constituent larger than 4 GiB, followed by a marker entry, then
+exercise both single-pass streaming and central-directory-seeking decoders.
+
+Java and Go are pinned by `test/integration/.tool-versions`. The native decoder probes additionally
+require Info-ZIP `unzip`, 7-Zip (`7z`), and libarchive (`bsdtar`). Install the asdf runtimes and
+native packages, then run:
+
+```shell
+(cd test/integration && asdf install)
+mix test test/integration --include integration
 ```
 
 ## Acknowledgements

@@ -19,6 +19,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Update development and test dependencies to their latest compatible stable releases.
 - Remove Hackney and its supporting dependencies from the lockfile following the Tzdata update.
 
+### Fixed
+
+- Encoded streaming Data Descriptor sizes as 64-bit values when required, preserving constituent
+  files larger than 4 GiB in Zip64 archives.
+
 ## [2.0.0] — 19 January 2026
 
 ### Changed

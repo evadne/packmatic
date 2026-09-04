@@ -263,6 +263,22 @@ defmodule PackmaticTest do
     assert {_, 0} = System.cmd("zipinfo", [context.file_path])
   end
 
+  @tag external: true
+  @tag timeout: 300_000
+  test "with a constituent file larger than 4 GiB", context do
+    chunk = :binary.copy(<<0>>, 1_048_576)
+    source = {:stream, Stream.repeatedly(fn -> chunk end) |> Stream.take(4097)}
+
+    [{source, "large.bin"}]
+    |> build_manifest()
+    |> Packmatic.build_stream()
+    |> Stream.into(File.stream!(context.file_path, [:write]))
+    |> Stream.run()
+
+    assert {_, 0} = System.cmd("zipinfo", ["-t", context.file_path])
+    assert {_, 0} = System.cmd("unzip", ["-t", context.file_path])
+  end
+
   defp get_sorted_zip_files(target) do
     get_zip_files(target) |> Enum.sort()
   end
