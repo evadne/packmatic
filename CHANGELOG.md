@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [Unreleased]
+
+### Security
+
+- Require Req 0.7.4, including fixes for CVE-2026-49755 and CVE-2026-49756.
+- Update locked HTTP dependencies, including Finch, Mint, HPAX, Cowboy, Cowlib, Plug and Plug.Cowboy.
+
+### Changed
+
+- Update development and test dependencies to their latest compatible stable releases.
+- Remove Hackney and its supporting dependencies from the lockfile following the Tzdata update.
+
 ## [2.0.0] — 19 January 2026
 
 ### Changed

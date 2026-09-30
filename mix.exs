@@ -35,8 +35,8 @@ defmodule Packmatic.MixProject do
 
   defp deps(:dev) do
     [
-      {:dialyxir, "~> 1.4.7", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.39.1", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.4.8", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.40.4", only: :dev, runtime: false}
     ]
   end
 
@@ -44,20 +44,21 @@ defmodule Packmatic.MixProject do
     [
       {:briefly, "~> 0.5.1", only: [:test, :dev]},
       {:bypass, "~> 2.1.0", only: [:test, :dev]},
-      {:cowboy, "~> 2.14.2", only: [:test, :dev]},
+      {:cowboy, "~> 2.19.0", only: [:test, :dev]},
       {:incendium, "~> 0.5.0", only: [:test, :dev]},
-      {:mox, "~> 1.2.0", only: [:test, :dev]},
-      {:plug_cowboy, "~> 2.7.5", only: [:test, :dev]},
-      {:plug, "~> 1.18.1", only: [:test, :dev]},
-      {:stream_data, "~> 1.2.0", only: [:test, :dev]},
-      {:teamcity_formatter, github: "prook/teamcity_formatter", only: [:test, :dev], runtime: false},
+      {:mox, "~> 1.3.2", only: [:test, :dev]},
+      {:plug_cowboy, "~> 2.9.0", only: [:test, :dev]},
+      {:plug, "~> 1.20.3", only: [:test, :dev]},
+      {:stream_data, "~> 1.4.0", only: [:test, :dev]},
+      {:teamcity_formatter,
+       github: "prook/teamcity_formatter", only: [:test, :dev], runtime: false},
       {:timex, "~> 3.7.13", only: [:test, :dev]}
     ]
   end
 
   defp deps(:prod) do
     [
-      {:req, "~> 0.5.16"}
+      {:req, "~> 0.7.4"}
     ]
   end
 
