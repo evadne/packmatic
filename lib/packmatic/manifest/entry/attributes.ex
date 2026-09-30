@@ -19,7 +19,7 @@ defmodule Packmatic.Manifest.Entry.Attributes do
         }
 
   @type proplist :: nonempty_list(mode | {:uid, uid} | {:gid, gid} | :setuid | :setgid | :sticky)
-  
+
   @typedoc """
   Represents the representation of the Attributes within the Manifest Entry, which can either
   be the `t:mode/0` itself (as a shorthand) or a property list `t:proplist/0` that can be used to
