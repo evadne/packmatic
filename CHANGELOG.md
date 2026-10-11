@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [1]: https://keepachangelog.com/en/1.0.0/
 [2]: https://semver.org/spec/v2.0.0.html
 
+## [2.1.0] — 11 October 2026
+
+### Security
+
+- Require Req 0.7.4, including fixes for CVE-2026-49755 and CVE-2026-49756.
+- Update locked HTTP dependencies, including Finch, Mint, HPAX, Cowboy, Cowlib, Plug and Plug.Cowboy.
+
+### Changed
+
+- Add regression coverage for Zip64 local-header offsets, including offsets beyond 4 GiB.
+- Update development and test dependencies to their latest compatible stable releases.
+- Remove Hackney and its supporting dependencies from the lockfile following the Tzdata update.
+
+### Fixed
+
+- Encoded streaming Data Descriptor sizes as 64-bit values when required, preserving constituent
+  files larger than 4 GiB in Zip64 archives.
+
 ## [2.0.0] — 19 January 2026
 
 ### Changed
@@ -156,6 +174,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 - Initial Release.
 
 [unreleased]: https://github.com/evadne/packmatic/compare/master...develop
+[2.1.0]: https://github.com/evadne/packmatic/releases/tag/v2.1.0
 [2.0.0]: https://github.com/evadne/packmatic/releases/tag/v2.0.0
 [1.2.0]: https://github.com/evadne/packmatic/releases/tag/v1.2.0
 [1.1.4]: https://github.com/evadne/packmatic/releases/tag/v1.1.4
