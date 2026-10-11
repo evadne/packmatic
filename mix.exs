@@ -66,7 +66,7 @@ defmodule Packmatic.MixProject do
     [
       maintainers: ["Evadne Wu"],
       files: package_files(),
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/evadne/packmatic"}
     ]
   end
