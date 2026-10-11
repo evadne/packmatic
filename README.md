@@ -54,7 +54,7 @@ To install Packmatic, add the following line in your application’s dependencie
 ```elixir
 defp deps do
   [
-    {:packmatic, "~> 2.0.0"}
+    {:packmatic, "~> 2.1.0"}
   ]
 end
 ```
