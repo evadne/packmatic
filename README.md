@@ -341,6 +341,7 @@ The Author wishes to thank the following individuals:
 - [Peter Nicholls][pnicholls] for Zip64 offset fixes
 - [Stefano Gessa][sgessa] for Erlang/OTP 27 compatibility and permission fixes
 - [David Bernheisel][dbernheisel] for DEFLATE level enhancements
+- [Philip Giuliani / KIM Keep In Mind][kim-company] for Zip64 local-header offset regression tests
 
 ## Reference
 
@@ -352,3 +353,4 @@ The Author wishes to thank the following individuals:
 [pnicholls]: https://github.com/pnicholls
 [sgessa]: https://github.com/sgessa
 [dbernheisel]: https://github.com/dbernheisel
+[kim-company]: https://github.com/kim-company

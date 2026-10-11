@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ### Changed
 
+- Add regression coverage for Zip64 local-header offsets, including offsets beyond 4 GiB.
 - Update development and test dependencies to their latest compatible stable releases.
 - Remove Hackney and its supporting dependencies from the lockfile following the Tzdata update.
 
