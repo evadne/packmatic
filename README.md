@@ -213,16 +213,59 @@ See documentation for `Packmatic.Event` for a complete list of Event types.
 
 ### Compatibility
 
-- Windows
-  - Windows Explorer (Windows 10): OK
-  - 7-Zip: OK
+Apple's Archive Utility is the primary macOS compatibility target. Release verification on
+11 October 2026 also covered Keka, The Unarchiver and the official 7-Zip CLI. Results apply
+to the application and OS versions recorded below; they do not establish compatibility with
+other versions or with the Windows 7-Zip GUI.
 
-- macOS
-  - Finder (High Sierra): OK
-  - Finder (Sequoia): OK
-  - `/usr/bin/unzip` (Sequoia 15.5, Apple-modified Info-ZIP 6.00): OK
-  - The Unarchiver (High Sierra): ?
-  - Erlang/OTP 27+ (`:zip`): OK
+Release verification covered:
+
+- Individual files above 4 GiB using STORE and DEFLATE.
+- Compressed size above 4 GiB with an original size of `0xffffffff`.
+- Local-header offsets above 4 GiB while individual files remain below that boundary.
+- Archives containing 65,535 and 65,536 entries.
+- Mixed compression methods, empty files and Unicode filenames.
+
+Each archive included a trailing marker file to check that extraction continued through the
+final entry.
+
+#### macOS 15.5 (Sequoia), build 24F74, Apple silicon
+
+Client | Version | Verification | Result
+--- | --- | --- | ---
+Archive Utility | 10.15 (162) | Stock application extraction | No errors
+Keka | 1.6.8 (5748) | GUI extraction | No errors
+The Unarchiver | 4.3.9 (147) | GUI extraction | No errors
+7-Zip | 26.04 | Official macOS CLI integrity checks | No errors
+
+For all three GUI applications, every extracted filename, size and SHA-256 matched the source
+manifest. Python's `zipfile` independently read the test archives and matched their source
+hashes. The 7-Zip result is a CLI integrity check, not a GUI test. Results from command-line
+tools or individual extraction engines do not substitute for testing Archive Utility itself.
+
+#### Linux decoder checks
+
+The same cases were checked on Linux x86-64 (kernel 6.8.0-139-generic).
+
+Decoder | Version | Verification | Result
+--- | --- | --- | ---
+Info-ZIP `unzip` | 6.00 (Debian) | Archive integrity checks | No errors
+7-Zip | 25.01 | Archive integrity checks | No errors
+libarchive `bsdtar` | 3.7.4 | Read every entry | No errors
+Java `ZipFile` | Temurin 21.0.10+7 | Read every entry; verify names and byte counts | No errors
+Go `archive/zip` | 1.25.7 | Read every entry; verify names and byte counts | No errors
+Java `ZipInputStream` | Temurin 21.0.10+7 | Single-pass reads; verify names and byte counts | No errors with DEFLATE-only archives; STORE entries rejected
+
+Java's `ZipInputStream` rejects STORE entries with data descriptors. Use `ZipFile` for archives
+containing STORE entries, or use DEFLATE when consumers require Java's single-pass reader.
+
+#### Earlier observations
+
+Earlier checks reported successful extraction with Windows Explorer on Windows 10, Windows
+7-Zip, Finder on High Sierra and Sequoia, Apple's `/usr/bin/unzip` on macOS 15.5, and Erlang/OTP
+`:zip` on OTP 27+. These observations were not all repeated in the release checks above and
+are not certification of every ZIP64 boundary or platform version. The earlier uncertainty
+about The Unarchiver on High Sierra remains unresolved; the new result covers macOS 15.5 only.
 
 ### Known Issues
 
@@ -316,6 +359,8 @@ end
 Decoder integration tests are tagged `integration` and excluded from the normal test suite. They
 generate an archive containing a constituent larger than 4 GiB, followed by a marker entry, then
 exercise both single-pass streaming and central-directory-seeking decoders.
+This automated suite covers the large DEFLATE constituent and trailing marker scenario;
+it does not reproduce the full set of release verification cases or the GUI checks above.
 
 Java and Go are pinned by `test/integration/.tool-versions`. The native decoder probes additionally
 require Info-ZIP `unzip`, 7-Zip (`7z`), and libarchive (`bsdtar`). Install the asdf runtimes and
